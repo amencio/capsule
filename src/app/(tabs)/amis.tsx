@@ -4,32 +4,31 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { SpaceBackground } from "../../components/SpaceBackground";
-import {
-  MOCK_USERS,
-  MOCK_CAPSULES,
-  CURRENT_USER_ID,
-} from "../../data/mocks";
-import { calculateAltitude } from "../../utils/karma";
+import { useCapsuleStore } from "../../context/CapsuleProvider";
+import { getRank } from "../../utils/ranks";
 import { STATUS_LABELS } from "../../constants/theme";
 
 export default function AmisScreen() {
+  const { capsules, friends, currentUserId } = useCapsuleStore();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  const allAltitudes = MOCK_USERS.map((user) => ({
-    user,
-    altitude: calculateAltitude(MOCK_CAPSULES, user.id),
-  }));
+  const allAltitudes = friends.map((user) => {
+    const altitude = capsules
+      .filter((c) => c.status === "resolved" && c.creditor_id === user.id)
+      .reduce((sum, c) => sum + c.amount, 0);
+    return { user, altitude };
+  });
   allAltitudes.sort((a, b) => b.altitude - a.altitude);
 
   const selectedUser = selectedUserId
-    ? MOCK_USERS.find((u) => u.id === selectedUserId)
+    ? friends.find((u) => u.id === selectedUserId)
     : null;
 
   const capsulesWithSelected = selectedUser
-    ? MOCK_CAPSULES.filter(
+    ? capsules.filter(
         (c) =>
           (c.creditor_id === selectedUser.id || c.debtor_id === selectedUser.id) &&
-          (c.creditor_id === CURRENT_USER_ID || c.debtor_id === CURRENT_USER_ID)
+          (c.creditor_id === currentUserId || c.debtor_id === currentUserId)
       )
     : [];
 
@@ -50,8 +49,9 @@ export default function AmisScreen() {
       >
         <View className="mb-4">
           {allAltitudes.map(({ user, altitude }, index) => {
-            const isCurrentUser = user.id === CURRENT_USER_ID;
+            const isCurrentUser = user.id === currentUserId;
             const isSelected = selectedUserId === user.id;
+            const rank = getRank(altitude);
             return (
               <Pressable
                 key={user.id}
@@ -91,20 +91,15 @@ export default function AmisScreen() {
                   >
                     {user.pseudo} {isCurrentUser && "(toi)"}
                   </Text>
-                  <Text className="text-white/40 text-[10px]">
-                    {altitude === 0
-                      ? "Houston (sur Terre)"
-                      : capsulesWithSelected.length > 0 && isSelected
-                      ? `${capsulesWithSelected.length} capsule(s) en commun`
-                      : "Cliquer pour détails"}
+                  <Text style={{ color: rank.color }} className="text-[10px] font-bold">
+                    {rank.emoji} {rank.name}
                   </Text>
                 </View>
 
                 <View className="items-end">
                   <Text
-                    className={`text-lg font-bold ${
-                      altitude > 0 ? "text-neon-green" : "text-neon-cyan"
-                    }`}
+                    style={{ color: rank.color }}
+                    className="text-lg font-bold"
                   >
                     {altitude}
                   </Text>
@@ -124,7 +119,7 @@ export default function AmisScreen() {
               <Text className="text-white/30 text-sm">Aucune capsule en commun</Text>
             ) : (
               capsulesWithSelected.map((c) => {
-                const isCreditor = c.creditor_id === CURRENT_USER_ID;
+                const isCreditor = c.creditor_id === currentUserId;
                 const direction = isCreditor
                   ? `→ Tu réclames à ${selectedUser.pseudo}`
                   : `← ${selectedUser.pseudo} te réclame`;

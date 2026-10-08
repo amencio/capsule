@@ -6,7 +6,8 @@ import {
   MOCK_PROFILES_MAP,
   CURRENT_USER_ID,
 } from "../data/mocks";
-import { calculateAltitude, calculateAltitudeForAll } from "../utils/karma";
+import { calculateAltitude, calculateAltitudeForAll, calculateKarma } from "../utils/karma";
+import { getRank, type OrbitalRank } from "../utils/ranks";
 import type { Capsule, UserProfile } from "../types";
 
 interface CapsuleStoreValue {
@@ -27,6 +28,10 @@ interface CapsuleStoreValue {
   activeAndWaitingCapsules: Capsule[];
   allUserCapsules: Capsule[];
   altitude: number;
+  carburantDisponible: number;
+  carburantEnCombustion: number;
+  karma: number;
+  rank: OrbitalRank;
   markers: { user: UserProfile; altitude: number }[];
 }
 
@@ -145,6 +150,32 @@ export function CapsuleProvider({ children }: { children: React.ReactNode }) {
     [capsules, currentUserId]
   );
 
+  const carburantDisponible = useMemo(
+    () =>
+      capsules.filter(
+        (c) => c.status === "active" && c.creditor_id === currentUserId
+      ).reduce((sum, c) => sum + c.amount, 0),
+    [capsules, currentUserId]
+  );
+
+  const carburantEnCombustion = useMemo(
+    () =>
+      capsules.filter(
+        (c) => c.status === "pending_launch" && c.creditor_id === currentUserId
+      ).reduce((sum, c) => sum + c.amount, 0),
+    [capsules, currentUserId]
+  );
+
+  const karma = useMemo(
+    () => calculateKarma(capsules, currentUserId),
+    [capsules, currentUserId]
+  );
+
+  const rank = useMemo(
+    () => getRank(altitude),
+    [altitude]
+  );
+
   const allAltitudes = useMemo(
     () => calculateAltitudeForAll(capsules, MOCK_USERS.map((u) => u.id)),
     [capsules]
@@ -177,6 +208,10 @@ export function CapsuleProvider({ children }: { children: React.ReactNode }) {
     activeAndWaitingCapsules,
     allUserCapsules,
     altitude,
+    carburantDisponible,
+    carburantEnCombustion,
+    karma,
+    rank,
     markers,
   };
 

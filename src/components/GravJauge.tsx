@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Image } from "expo-image";
 import Svg, { Circle, Path, Rect, Ellipse, Line } from "react-native-svg";
+import { ORBITAL_RANKS } from "../utils/ranks";
 import type { UserProfile } from "../types";
 
 const AVATAR_W = 60;
@@ -261,6 +262,7 @@ export function GravJauge({ currentUserId, markers }: GravJaugeProps) {
   const gaugeHeight = screenHeight * 0.55;
 
   const maxAltitude = Math.max(1, ...markers.map((m) => m.altitude));
+  const safeMax = Math.max(maxAltitude, 1);
 
   const sortedMarkers = [...markers].sort((a, b) => a.altitude - b.altitude);
 
@@ -297,6 +299,32 @@ export function GravJauge({ currentUserId, markers }: GravJaugeProps) {
           ISS
         </Text>
       </View>
+
+      {/* Orbital tier markers on dashed line */}
+      {ORBITAL_RANKS.filter(
+        (r) => r.minAltitude > 0 && r.minAltitude <= maxAltitude
+      ).map((rank) => {
+        const percent = (rank.minAltitude / safeMax) * 100;
+        const bottomPx = (percent / 100) * gaugeHeight;
+        return (
+          <View
+            key={rank.minAltitude}
+            style={{
+              position: "absolute",
+              bottom: bottomPx + 15,
+              left: "50%",
+              transform: [{ translateX: -1 }],
+              alignItems: "center",
+              zIndex: 1,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+              <View style={{ width: 8, height: 1.5, backgroundColor: rank.color, opacity: 0.5 }} />
+              <Text style={{ fontSize: 7, opacity: 0.4 }}>{rank.emoji}</Text>
+            </View>
+          </View>
+        );
+      })}
 
       {/* Cosmonaut avatars positioned by percentage bottom */}
       {sortedMarkers.map((marker, index) => (

@@ -9,6 +9,7 @@ import { CapsuleCard } from "../../components/CapsuleCard";
 import { PendingAlertBanner } from "../../components/PendingAlertBanner";
 import { ProfileSwitcher } from "../../components/ProfileSwitcher";
 import { LaunchModal } from "../../components/LaunchModal";
+import { FuelGauge } from "../../components/FuelGauge";
 import { useCapsuleStore } from "../../context/CapsuleProvider";
 
 export default function DashboardScreen() {
@@ -28,6 +29,9 @@ export default function DashboardScreen() {
     profilesMap,
     friends,
     markers,
+    carburantDisponible,
+    carburantEnCombustion,
+    rank,
   } = useCapsuleStore();
 
   const [launchVisible, setLaunchVisible] = useState(false);
@@ -63,6 +67,14 @@ export default function DashboardScreen() {
       <View className="flex-1 flex-row px-4 z-10">
         <View className="w-[35%] items-center justify-start pt-4">
           <GravJauge currentUserId={currentUserId} markers={markers} />
+          <View className="mt-4">
+            <FuelGauge available={carburantDisponible} burning={carburantEnCombustion} />
+          </View>
+          <View className="mt-3 items-center">
+            <Text style={{ color: rank.color }} className="text-xs font-bold">
+              {rank.emoji} {rank.name}
+            </Text>
+          </View>
         </View>
 
         <View className="flex-1 pl-2">

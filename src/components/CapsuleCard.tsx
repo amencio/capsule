@@ -186,7 +186,7 @@ export function CapsuleCard({
             <ActivityIndicator size="small" color="#000" />
           ) : (
             <Text className="text-black text-sm font-bold uppercase tracking-wide">
-              🍾 DÉCAPSULER
+              🚀 PRÉPARER LE DÉCOLLAGE
             </Text>
           )}
         </Pressable>
