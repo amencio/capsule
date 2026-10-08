@@ -22,7 +22,7 @@ npx expo start
 
 # Vérifications
 npx tsc --noEmit    # Typecheck → 0 erreur attendue
-npm run lint          # ESLint → 0 erreur attendue
+npx expo lint        # ESLint → 0 erreur attendue
 ```
 
 ---
@@ -32,12 +32,13 @@ npm run lint          # ESLint → 0 erreur attendue
 | Package | Version | Rôle |
 |---|---|---|
 | `expo` | `~57.0.0` | Framework principal (SDK 57) |
-| `react-native` | `0.86.0` | Runtime natif |
+| `react-native` | `0.86.3` | Runtime natif |
 | `react` | `19.2.3` | UI library |
 | `expo-router` | `~57.0.0` | Navigation file-based |
 | `nativewind` | `^4.2.7` | Tailwind CSS pour RN (v4, compatible Tailwind v3) |
 | `tailwindcss` | `^3.4.17` | Styling utility-first |
-| `react-native-reanimated` | `~4.2.0` | Animations 60fps (thread UI natif) |
+| `react-native-reanimated` | `~4.5.1` | Animations 60fps (thread UI natif) |
+| `react-native-worklets` | `0.10.1` | Dépendance Reanimated (thread JS worklets) |
 | `@tanstack/react-query` | `^5.0.0` | Cache, déduplication, mutations, stale-while-revalidate |
 | `@supabase/supabase-js` | `^2.109.0` | Client backend (auth, DB, realtime) |
 | `expo-haptics` | `~57.0.0` | Retours haptiques (décapsulage, acceptation) |
@@ -180,7 +181,7 @@ Trigger `on_auth_user_created` : à l'inscription, crée automatiquement un prof
 │   ├── app/                         # Expo Router screens
 │   │   ├── (tabs)/
 │   │   │   ├── _layout.tsx          # Onglets (Orbite, Frigo, Lancer) + Realtime hooks + tab bar dynamique
-│   │   │   ├── index.tsx            # Écran Orbite (Jauge Gravitationnelle & stats) — edges={["top"]}
+│   │   │   ├── index.tsx            # Écran Orbite (Jauge Gravitationnelle & stats + bouton Déconnexion) — edges={["top"]}
 │   │   │   ├── frigo.tsx            # Écran Frigo (Ardoise + loading states + pendingActionId)
 │   │   │   └── lancer.tsx           # Écran Lancer (Demande de capsule + vérif session post-signup)
 │   │   ├── _layout.tsx              # Root layout : QueryClientProvider, AuthProvider, HoustonToastProvider, ErrorBoundary
@@ -268,6 +269,20 @@ Trigger `on_auth_user_created` : à l'inscription, crée automatiquement un prof
 | Bugfix: GravJauge animations orphelines (Strict Mode) | `cancelAnimation(translateY)` + `cancelAnimation(floatAnim)` dans le cleanup |
 | Bugfix: Tab bar masquée par nav bar Samsung | `edgeToEdgeEnabled` + hauteur dynamique `60 + insets.bottom` + `edges={["top"]}` sur les écrans |
 | Bugfix: Versions incompatibles SDK 57 | `npx expo install --fix` + `react-native-worklets@0.10.1` |
+| Bouton Déconnexion | `signOut()` exposé via `useAuthContext()`, bouton Pressable en haut à droite de l'écran Orbite. Au tap → `supabase.auth.signOut()` → session supprimée → redirection auto vers `/login` via `_layout.tsx` |
+| Git & GitHub | Repo initialisé, premier commit, `git push` configuré. Auth via GitHub CLI (`gh auth login`) ou Personal Access Token (PAT) |
+
+---
+
+## Git & GitHub
+
+- **Repo GitHub** : privé, nommé `capsule`
+- **Branche principale** : `main`
+- **Authentification** : GitHub CLI (`gh auth login`) ou Personal Access Token (PAT, scope `repo`, expiration 90j)
+- **Supabase credentials** : la `anon key` dans `app.json` est une clé publique (sécurité gérée par RLS Supabase), donc safe à commiter
+- **Commit message style** : Conventional Commits en anglais (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`)
+
+---
 
 ### À faire
 
