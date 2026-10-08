@@ -155,7 +155,7 @@ export function CapsuleCard({
             {isPending ? (
               <ActivityIndicator size="small" color="#000" />
             ) : (
-              <Text className="text-black text-sm font-bold">Accepter</Text>
+              <Text className="text-black text-sm font-bold">JE FOURNIS ⛽</Text>
             )}
           </Pressable>
           <Pressable
@@ -171,7 +171,7 @@ export function CapsuleCard({
 
       {capsule.status === "pending" && isCreditor && (
         <Text className="text-xs mt-2 italic" style={{ color: "#92400e" }}>
-          En attente de validation...
+          Demande envoyée — en attente de réponse...
         </Text>
       )}
 
@@ -194,7 +194,7 @@ export function CapsuleCard({
 
       {capsule.status === "active" && !isCreditor && (
         <Text className="text-xs mt-2 italic text-gray-500">
-          En attente de décollage...
+          Carburant prêt — en attente de décollage...
         </Text>
       )}
 

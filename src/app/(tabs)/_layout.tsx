@@ -5,6 +5,7 @@ import { COLORS } from "../../constants/theme";
 import { useAuthContext } from "../../context/AuthProvider";
 import { useCapsulesRealtime } from "../../hooks/useCapsules";
 import { useProfilesRealtime } from "../../hooks/useProfiles";
+import { CapsuleProvider } from "../../context/CapsuleProvider";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
@@ -15,6 +16,7 @@ export default function TabsLayout() {
   useProfilesRealtime(userId);
 
   return (
+    <CapsuleProvider>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -70,5 +72,6 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+    </CapsuleProvider>
   );
 }

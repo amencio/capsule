@@ -69,7 +69,7 @@ export function LaunchModal({
           <View className="w-12 h-1 bg-space-border rounded-full self-center mb-4" />
 
           <Text className="text-white text-lg font-bold mb-4">
-            🚀 Lancer une capsule
+            🚀 Demander du carburant
           </Text>
 
           <Text className="text-white/50 text-xs font-bold tracking-wide uppercase mb-2">
@@ -196,7 +196,7 @@ export function LaunchModal({
                   canLaunch ? "text-white" : "text-white/30"
                 }`}
               >
-                🚀 LANCER !
+                🚀 DEMANDER !
               </Text>
             </Pressable>
           </View>
