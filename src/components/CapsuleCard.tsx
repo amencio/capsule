@@ -14,30 +14,6 @@ import { STATUS_LABELS, STATUS_COLORS } from "../constants/theme";
 import { DRINK_EMOJIS } from "../data/mocks";
 import type { Capsule, UserProfile } from "../types";
 
-const HARD_SHADOW = {
-  shadowColor: "#000",
-  shadowOffset: { width: 4, height: 4 },
-  shadowOpacity: 1,
-  shadowRadius: 0,
-  elevation: 5,
-};
-
-const HARD_SHADOW_SM = {
-  shadowColor: "#000",
-  shadowOffset: { width: 2, height: 4 },
-  shadowOpacity: 1,
-  shadowRadius: 0,
-  elevation: 4,
-};
-
-const HARD_SHADOW_BTN = {
-  shadowColor: "#000",
-  shadowOffset: { width: 2, height: 4 },
-  shadowOpacity: 1,
-  shadowRadius: 0,
-  elevation: 4,
-};
-
 interface CapsuleCardProps {
   capsule: Capsule;
   currentUserId: string;
@@ -93,11 +69,8 @@ export function CapsuleCard({
 
   return (
     <Animated.View
-      className="rounded-xl p-4 mb-4 border-2"
-      style={[
-        { backgroundColor: "#f8f9fa", ...HARD_SHADOW },
-        isLaunchAlert ? alertBorderStyle : { borderColor: "#000" },
-      ]}
+      className="rounded-xl p-4 mb-4 border-2 border-black bg-[#f8f9fa] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+      style={[isLaunchAlert ? alertBorderStyle : undefined]}
     >
       <View className="flex-row items-center gap-3 mb-2">
         <View
@@ -149,8 +122,7 @@ export function CapsuleCard({
           <Pressable
             onPress={() => onAccept?.(capsule.id)}
             disabled={isPending}
-            className="flex-1 rounded-lg py-2.5 items-center border-2 border-black"
-            style={{ backgroundColor: "#4ade80", ...HARD_SHADOW_SM }}
+            className="flex-1 rounded-lg py-2.5 items-center border-2 border-black bg-[#4ade80] shadow-[2px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
           >
             {isPending ? (
               <ActivityIndicator size="small" color="#000" />
@@ -161,8 +133,7 @@ export function CapsuleCard({
           <Pressable
             onPress={() => onRefuse?.(capsule.id)}
             disabled={isPending}
-            className="flex-1 rounded-lg py-2.5 items-center border-2 border-black"
-            style={{ backgroundColor: "#f87171", ...HARD_SHADOW_SM }}
+            className="flex-1 rounded-lg py-2.5 items-center border-2 border-black bg-[#f87171] shadow-[2px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
           >
             <Text className="text-black text-sm font-bold">Refuser</Text>
           </Pressable>
@@ -179,8 +150,7 @@ export function CapsuleCard({
         <Pressable
           onPress={() => onDecapsuler?.(capsule.id)}
           disabled={isPending}
-          className="mt-3 py-3 items-center rounded-lg border-2 border-black"
-          style={{ backgroundColor: "#4ade80", ...HARD_SHADOW_BTN }}
+          className="mt-3 py-3 items-center rounded-lg border-2 border-black bg-[#4ade80] shadow-[2px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
         >
           {isPending ? (
             <ActivityIndicator size="small" color="#000" />
@@ -200,8 +170,7 @@ export function CapsuleCard({
 
       {capsule.status === "pending_launch" && isCreditor && (
         <View
-          className="mt-3 py-3 items-center rounded-lg border-2 border-black"
-          style={{ backgroundColor: "#9ca3af", ...HARD_SHADOW_BTN }}
+          className="mt-3 py-3 items-center rounded-lg border-2 border-black bg-[#9ca3af] shadow-[2px_4px_0px_0px_rgba(0,0,0,1)]"
         >
           <Text className="text-white text-sm font-bold uppercase tracking-wide">
             ⏳ En attente de Houston...
@@ -213,8 +182,7 @@ export function CapsuleCard({
         <Pressable
           onPress={() => onAuthorize?.(capsule.id)}
           disabled={isPending}
-          className="mt-3 py-3 items-center rounded-lg border-2 border-black"
-          style={{ backgroundColor: "#f97316", ...HARD_SHADOW_BTN }}
+          className="mt-3 py-3 items-center rounded-lg border-2 border-black bg-[#f97316] shadow-[2px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
         >
           {isPending ? (
             <ActivityIndicator size="small" color="#fff" />

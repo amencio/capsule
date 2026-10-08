@@ -15,7 +15,7 @@ import { ORBITAL_RANKS } from "../utils/ranks";
 import type { UserProfile } from "../types";
 
 const AVATAR_W = 60;
-const AVATAR_H = 95;
+const AVATAR_H = 100;
 
 interface AvatarMarker {
   user: UserProfile;
@@ -29,52 +29,52 @@ interface GravJaugeProps {
 
 function CosmonautSVG() {
   return (
-    <Svg width={AVATAR_W} height={AVATAR_H} viewBox="0 0 60 95">
+    <Svg width={AVATAR_W} height={AVATAR_H} viewBox="0 0 60 100">
       {/* Backpack */}
-      <Rect x="10" y="40" width="40" height="28" rx="6" fill="#d0d0d0" stroke="black" strokeWidth="2" />
-      <Circle cx="15" cy="46" r="2" fill="#888" />
-      <Circle cx="15" cy="52" r="2" fill="#888" />
-      <Circle cx="45" cy="46" r="2" fill="#888" />
-      <Circle cx="45" cy="52" r="2" fill="#888" />
+      <Rect x="10" y="45" width="40" height="28" rx="6" fill="#d0d0d0" stroke="black" strokeWidth="2" />
+      <Circle cx="15" cy="51" r="2" fill="#888" />
+      <Circle cx="15" cy="57" r="2" fill="#888" />
+      <Circle cx="45" cy="51" r="2" fill="#888" />
+      <Circle cx="45" cy="57" r="2" fill="#888" />
 
       {/* Arms */}
-      <Path d="M14 45 Q8 50 6 58" stroke="white" strokeWidth="7" strokeLinecap="round" fill="none" />
-      <Path d="M14 45 Q8 50 6 58" stroke="black" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <Path d="M46 45 Q52 50 54 58" stroke="white" strokeWidth="7" strokeLinecap="round" fill="none" />
-      <Path d="M46 45 Q52 50 54 58" stroke="black" strokeWidth="2" strokeLinecap="round" fill="none" />
+      <Path d="M14 50 Q8 55 6 63" stroke="white" strokeWidth="7" strokeLinecap="round" fill="none" />
+      <Path d="M14 50 Q8 55 6 63" stroke="black" strokeWidth="2" strokeLinecap="round" fill="none" />
+      <Path d="M46 50 Q52 55 54 63" stroke="white" strokeWidth="7" strokeLinecap="round" fill="none" />
+      <Path d="M46 50 Q52 55 54 63" stroke="black" strokeWidth="2" strokeLinecap="round" fill="none" />
 
       {/* Body */}
       <Path
-        d="M14 42 Q14 60 18 78 L42 78 Q46 60 46 42 Z"
+        d="M14 47 Q14 65 18 83 L42 83 Q46 65 46 47 Z"
         fill="white"
         stroke="black"
         strokeWidth="2"
       />
 
       {/* Belt */}
-      <Rect x="18" y="62" width="24" height="4" fill="#FF6B1A" stroke="black" strokeWidth="1" />
+      <Rect x="18" y="67" width="24" height="4" fill="#FF6B1A" stroke="black" strokeWidth="1" />
 
       {/* Legs */}
-      <Rect x="22" y="78" width="7" height="14" rx="3" fill="white" stroke="black" strokeWidth="2" />
-      <Rect x="31" y="78" width="7" height="14" rx="3" fill="white" stroke="black" strokeWidth="2" />
+      <Rect x="22" y="83" width="7" height="14" rx="3" fill="white" stroke="black" strokeWidth="2" />
+      <Rect x="31" y="83" width="7" height="14" rx="3" fill="white" stroke="black" strokeWidth="2" />
 
       {/* Boots */}
-      <Rect x="20" y="90" width="11" height="5" rx="2" fill="#333" stroke="black" strokeWidth="1.5" />
-      <Rect x="29" y="90" width="11" height="5" rx="2" fill="#333" stroke="black" strokeWidth="1.5" />
+      <Rect x="20" y="95" width="11" height="5" rx="2" fill="#333" stroke="black" strokeWidth="1.5" />
+      <Rect x="29" y="95" width="11" height="5" rx="2" fill="#333" stroke="black" strokeWidth="1.5" />
 
       {/* Helmet */}
-      <Circle cx="30" cy="25" r="22" fill="white" stroke="black" strokeWidth="2" />
+      <Circle cx="30" cy="30" r="22" fill="white" stroke="black" strokeWidth="2" />
 
       {/* Visor */}
-      <Ellipse cx="30" cy="23" rx="16" ry="14" fill="#1a1a2e" stroke="black" strokeWidth="1.5" />
+      <Ellipse cx="30" cy="28" rx="16" ry="14" fill="#1a1a2e" stroke="black" strokeWidth="1.5" />
 
       {/* Visor reflection */}
-      <Path d="M18 16 Q22 12 28 12" stroke="rgba(0,240,255,0.5)" strokeWidth="3" strokeLinecap="round" fill="none" />
-      <Path d="M20 14 Q24 11 29 11" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <Path d="M18 21 Q22 17 28 17" stroke="rgba(0,240,255,0.5)" strokeWidth="3" strokeLinecap="round" fill="none" />
+      <Path d="M20 19 Q24 16 29 16" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
 
       {/* Antenna */}
-      <Line x1="30" y1="3" x2="30" y2="-2" stroke="black" strokeWidth="1.5" />
-      <Circle cx="30" cy="-1" r="2" fill="#FF3B30" stroke="black" strokeWidth="1" />
+      <Line x1="30" y1="8" x2="30" y2="3" stroke="black" strokeWidth="1.5" />
+      <Circle cx="30" cy="4" r="2" fill="#FF3B30" stroke="black" strokeWidth="1" />
     </Svg>
   );
 }
@@ -118,7 +118,6 @@ function CosmonautAvatar({
   user,
   altitude,
   maxAltitude,
-  gaugeHeight,
   isCurrentUser,
   isLeader,
   index,
@@ -126,7 +125,6 @@ function CosmonautAvatar({
   user: UserProfile;
   altitude: number;
   maxAltitude: number;
-  gaugeHeight: number;
   isCurrentUser: boolean;
   isLeader: boolean;
   index: number;
@@ -193,7 +191,7 @@ function CosmonautAvatar({
         <View
           style={{
             position: "absolute",
-            top: 12,
+            top: 17,
             left: AVATAR_W * 0.5 - 13,
             width: 26,
             height: 26,
@@ -223,7 +221,7 @@ function CosmonautAvatar({
       <View
         style={{
           position: "absolute",
-          top: AVATAR_H + 2,
+          top: AVATAR_H + 4,
           backgroundColor: "white",
           paddingHorizontal: 8,
           paddingVertical: 2,
@@ -267,7 +265,7 @@ export function GravJauge({ currentUserId, markers }: GravJaugeProps) {
   const sortedMarkers = [...markers].sort((a, b) => a.altitude - b.altitude);
 
   return (
-    <View className="items-center" style={{ height: gaugeHeight + 50 }}>
+    <View className="items-center" style={{ height: gaugeHeight + 50, overflow: "visible" }}>
       {/* Dashed vertical line */}
       <View
         style={{
@@ -333,7 +331,6 @@ export function GravJauge({ currentUserId, markers }: GravJaugeProps) {
           user={marker.user}
           altitude={marker.altitude}
           maxAltitude={maxAltitude}
-          gaugeHeight={gaugeHeight}
           isCurrentUser={marker.user.id === currentUserId}
           isLeader={marker.altitude === maxAltitude && marker.altitude > 0}
           index={index}

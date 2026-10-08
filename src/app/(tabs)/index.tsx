@@ -112,7 +112,7 @@ export default function DashboardScreen() {
             ))}
 
             {pendingReceivedCapsules.length > 0 && (
-              <Text className="text-white/60 text-xs font-bold tracking-widest uppercase mb-2 mt-2">
+              <Text className="text-black/60 text-xs font-bold tracking-widest uppercase mb-2 mt-2">
                 Demandes reçues
               </Text>
             )}
@@ -130,7 +130,7 @@ export default function DashboardScreen() {
             ))}
 
             {pendingSentCapsules.length > 0 && (
-              <Text className="text-white/60 text-xs font-bold tracking-widest uppercase mb-2 mt-2">
+              <Text className="text-black/60 text-xs font-bold tracking-widest uppercase mb-2 mt-2">
                 Demandes envoyées
               </Text>
             )}
@@ -146,7 +146,7 @@ export default function DashboardScreen() {
             ))}
 
             {activeAndWaitingCapsules.length > 0 && (
-              <Text className="text-white/60 text-xs font-bold tracking-widest uppercase mb-2 mt-2">
+              <Text className="text-black/60 text-xs font-bold tracking-widest uppercase mb-2 mt-2">
                 Mes Capsules
               </Text>
             )}
@@ -164,11 +164,11 @@ export default function DashboardScreen() {
             ))}
 
             {!hasCapsules && (
-              <View className="rounded-2xl p-6 items-center mt-2 border-2 border-dashed border-white/20">
-                <Text className="text-white/30 text-sm">
+              <View className="rounded-2xl p-6 items-center mt-2 border-2 border-dashed border-black/20 bg-[#f8f9fa]">
+                <Text className="text-black/30 text-sm">
                   Aucune capsule en orbite
                 </Text>
-                <Text className="text-white/20 text-xs mt-1">
+                <Text className="text-black/20 text-xs mt-1">
                   Demande du carburant pour commencer 🚀
                 </Text>
               </View>

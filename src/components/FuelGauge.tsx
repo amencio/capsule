@@ -100,6 +100,9 @@ export function FuelGauge({ available, burning, max = FUEL_MAX }: FuelGaugeProps
           <Text style={{ color: "#00FF66", fontSize: 18, fontWeight: "bold" }}>
             {available}
           </Text>
+          <Text style={{ color: "rgba(255,255,255,0.3)", fontSize: 8, fontWeight: "bold" }}>
+            / {max}
+          </Text>
           <Animated.Text style={[{ color: "#FF6B1A", fontSize: 10, fontWeight: "bold" }, flickerStyle]}>
             {burning > 0 ? `🔥 ${burning}` : ""}
           </Animated.Text>

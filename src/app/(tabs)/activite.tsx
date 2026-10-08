@@ -38,7 +38,7 @@ export default function ActiviteScreen() {
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-space-deep">
-      <SpaceBackground width={390} height={844} />
+      <SpaceBackground />
 
       <View className="px-4 pt-4 pb-2 z-10">
         <Text className="text-white text-xl font-bold">Activité</Text>
@@ -55,15 +55,15 @@ export default function ActiviteScreen() {
               setFilter(f.value);
               Haptics.selectionAsync();
             }}
-            className={`mr-2 mb-1 px-3 py-1.5 rounded-lg border ${
+            className={`mr-2 mb-1 px-3 py-1.5 rounded-lg border-2 border-black ${
               filter === f.value
-                ? "bg-neon-green/15 border-neon-green/50"
-                : "bg-space-surface border-space-border"
+                ? "bg-[#4ade80]"
+                : "bg-[#f8f9fa] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
             }`}
           >
             <Text
               className={`text-xs font-bold ${
-                filter === f.value ? "text-neon-green" : "text-white/50"
+                filter === f.value ? "text-black" : "text-black/50"
               }`}
             >
               {f.label}
@@ -77,8 +77,8 @@ export default function ActiviteScreen() {
         showsVerticalScrollIndicator={false}
       >
         {filteredCapsules.length === 0 ? (
-          <View className="bg-space-card/50 border border-dashed border-space-border rounded-2xl p-6 items-center mt-4">
-            <Text className="text-white/30 text-sm">Aucune activité</Text>
+          <View className="bg-[#f8f9fa] border-2 border-dashed border-black rounded-2xl p-6 items-center mt-4">
+            <Text className="text-black/30 text-sm">Aucune activité</Text>
           </View>
         ) : (
           filteredCapsules.map((capsule) => (

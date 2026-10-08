@@ -65,14 +65,14 @@ export function LaunchModal({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1 justify-end"
       >
-        <View className="bg-space-surface border-t border-space-border rounded-t-3xl px-5 pt-3 pb-8">
-          <View className="w-12 h-1 bg-space-border rounded-full self-center mb-4" />
+        <View className="bg-[#f8f9fa] border-t-2 border-black rounded-t-3xl px-5 pt-3 pb-8">
+          <View className="w-12 h-1 bg-black/20 rounded-full self-center mb-4" />
 
-          <Text className="text-white text-lg font-bold mb-4">
+          <Text className="text-black text-lg font-bold mb-4">
             🚀 Demander du carburant
           </Text>
 
-          <Text className="text-white/50 text-xs font-bold tracking-wide uppercase mb-2">
+          <Text className="text-black/50 text-xs font-bold tracking-wide uppercase mb-2">
             Cible
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
@@ -86,15 +86,15 @@ export function LaunchModal({
                       setSelectedId(friend.id);
                       Haptics.selectionAsync();
                     }}
-                    className={`px-4 py-2 rounded-full border ${
+                    className={`px-4 py-2 rounded-full border-2 border-black ${
                       selectedId === friend.id
-                        ? "bg-neon-orange/20 border-neon-orange"
-                        : "bg-space-card border-space-border"
+                        ? "bg-[#f97316]"
+                        : "bg-white"
                     }`}
                   >
                     <Text
-                      className={`text-sm font-semibold ${
-                        selectedId === friend.id ? "text-neon-orange" : "text-white/70"
+                      className={`text-sm font-bold ${
+                        selectedId === friend.id ? "text-white" : "text-black"
                       }`}
                     >
                       {friend.pseudo}
@@ -104,7 +104,7 @@ export function LaunchModal({
             </View>
           </ScrollView>
 
-          <Text className="text-white/50 text-xs font-bold tracking-wide uppercase mb-2">
+          <Text className="text-black/50 text-xs font-bold tracking-wide uppercase mb-2">
             Boisson
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
@@ -116,15 +116,15 @@ export function LaunchModal({
                     setDrinkType(drink);
                     setCustomDrink("");
                   }}
-                  className={`px-3 py-1.5 rounded-lg border ${
+                  className={`px-3 py-1.5 rounded-lg border-2 border-black ${
                     drinkType === drink && !customDrink
-                      ? "bg-neon-green/15 border-neon-green/50"
-                      : "bg-space-card border-space-border"
+                      ? "bg-[#4ade80]"
+                      : "bg-white"
                   }`}
                 >
                   <Text
-                    className={`text-xs font-semibold ${
-                      drinkType === drink && !customDrink ? "text-neon-green" : "text-white/60"
+                    className={`text-xs font-bold ${
+                      drinkType === drink && !customDrink ? "text-black" : "text-black/60"
                     }`}
                   >
                     {drink}
@@ -137,42 +137,42 @@ export function LaunchModal({
             value={customDrink}
             onChangeText={setCustomDrink}
             placeholder="Ou boisson personnalisée..."
-            placeholderTextColor="rgba(255,255,255,0.25)"
-            className="bg-space-card border border-space-border rounded-xl px-4 py-2.5 text-white text-sm mb-4"
+            placeholderTextColor="rgba(0,0,0,0.25)"
+            className="bg-white border-2 border-black rounded-xl px-4 py-2.5 text-black text-sm mb-4"
           />
 
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-white/50 text-xs font-bold tracking-wide uppercase">
+            <Text className="text-black/50 text-xs font-bold tracking-wide uppercase">
               Quantité
             </Text>
             <View className="flex-row items-center gap-4">
               <Pressable
                 onPress={() => setAmount(Math.max(1, amount - 1))}
-                className="w-8 h-8 rounded-full bg-space-card border border-space-border items-center justify-center"
+                className="w-8 h-8 rounded-full bg-white border-2 border-black items-center justify-center"
               >
-                <Text className="text-white text-lg font-bold">−</Text>
+                <Text className="text-black text-lg font-bold">−</Text>
               </Pressable>
-              <Text className="text-white text-lg font-bold w-6 text-center">
+              <Text className="text-black text-lg font-bold w-6 text-center">
                 {amount}
               </Text>
               <Pressable
                 onPress={() => setAmount(amount + 1)}
-                className="w-8 h-8 rounded-full bg-space-card border border-space-border items-center justify-center"
+                className="w-8 h-8 rounded-full bg-white border-2 border-black items-center justify-center"
               >
-                <Text className="text-white text-lg font-bold">+</Text>
+                <Text className="text-black text-lg font-bold">+</Text>
               </Pressable>
             </View>
           </View>
 
-          <Text className="text-white/50 text-xs font-bold tracking-wide uppercase mb-2">
+          <Text className="text-black/50 text-xs font-bold tracking-wide uppercase mb-2">
             Motif
           </Text>
           <TextInput
             value={reason}
             onChangeText={setReason}
             placeholder="Ex: Pari Ligue 1 !"
-            placeholderTextColor="rgba(255,255,255,0.25)"
-            className="bg-space-card border border-space-border rounded-xl px-4 py-3 text-white text-sm mb-4"
+            placeholderTextColor="rgba(0,0,0,0.25)"
+            className="bg-white border-2 border-black rounded-xl px-4 py-3 text-black text-sm mb-4"
             multiline
             numberOfLines={2}
           />
@@ -180,20 +180,22 @@ export function LaunchModal({
           <View className="flex-row gap-3">
             <Pressable
               onPress={onClose}
-              className="flex-1 bg-space-card border border-space-border rounded-xl py-3 items-center"
+              className="flex-1 bg-white border-2 border-black rounded-xl py-3 items-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-0.5"
             >
-              <Text className="text-white/60 text-sm font-bold">Annuler</Text>
+              <Text className="text-black/60 text-sm font-bold">Annuler</Text>
             </Pressable>
             <Pressable
               onPress={handleLaunch}
               disabled={!canLaunch}
-              className={`flex-[2] rounded-xl py-3 items-center ${
-                canLaunch ? "bg-neon-orange" : "bg-neon-orange/20"
+              className={`flex-[2] rounded-xl py-3 items-center border-2 border-black ${
+                canLaunch
+                  ? "bg-[#f97316] shadow-[4px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
+                  : "bg-[#f97316]/20"
               }`}
             >
               <Text
                 className={`text-sm font-bold tracking-wide ${
-                  canLaunch ? "text-white" : "text-white/30"
+                  canLaunch ? "text-white" : "text-white/50"
                 }`}
               >
                 🚀 DEMANDER !

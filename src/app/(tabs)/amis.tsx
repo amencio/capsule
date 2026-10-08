@@ -8,6 +8,8 @@ import { useCapsuleStore } from "../../context/CapsuleProvider";
 import { getRank } from "../../utils/ranks";
 import { STATUS_LABELS } from "../../constants/theme";
 
+const TOP3_MEDALS = ["🥇", "🥈", "🥉"];
+
 export default function AmisScreen() {
   const { capsules, friends, currentUserId } = useCapsuleStore();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export default function AmisScreen() {
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-space-deep">
-      <SpaceBackground width={390} height={844} />
+      <SpaceBackground />
 
       <View className="px-4 pt-4 pb-2 z-10">
         <Text className="text-white text-xl font-bold">Amis</Text>
@@ -52,6 +54,7 @@ export default function AmisScreen() {
             const isCurrentUser = user.id === currentUserId;
             const isSelected = selectedUserId === user.id;
             const rank = getRank(altitude);
+            const medal = index < 3 ? TOP3_MEDALS[index] : `#${index + 1}`;
             return (
               <Pressable
                 key={user.id}
@@ -59,17 +62,17 @@ export default function AmisScreen() {
                   Haptics.selectionAsync();
                   setSelectedUserId(isSelected ? null : user.id);
                 }}
-                className={`flex-row items-center gap-3 rounded-2xl px-4 py-3 mb-2 border ${
+                className={`flex-row items-center gap-3 rounded-xl px-4 py-3 mb-2 border-2 border-black ${
                   isSelected
-                    ? "bg-space-card border-neon-cyan/50"
-                    : "bg-space-surface border-space-border"
+                    ? "bg-[#06b6d4]/10"
+                    : "bg-[#f8f9fa] shadow-[2px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
                 }`}
               >
-                <Text className="text-white/30 text-sm font-bold w-6">
-                  #{index + 1}
+                <Text className="text-black/40 text-sm font-bold w-8">
+                  {medal}
                 </Text>
 
-                <View className="w-10 h-10 rounded-full items-center justify-center border-2 overflow-hidden bg-space-card">
+                <View className="w-10 h-10 rounded-full items-center justify-center border-2 border-black overflow-hidden bg-white">
                   {user.avatar_url ? (
                     <Image
                       source={{ uri: user.avatar_url }}
@@ -77,7 +80,7 @@ export default function AmisScreen() {
                       contentFit="cover"
                     />
                   ) : (
-                    <Text className="text-white text-sm font-bold">
+                    <Text className="text-black text-sm font-bold">
                       {user.pseudo.charAt(0).toUpperCase()}
                     </Text>
                   )}
@@ -86,7 +89,7 @@ export default function AmisScreen() {
                 <View className="flex-1">
                   <Text
                     className={`text-sm font-bold ${
-                      isCurrentUser ? "text-neon-cyan" : "text-white"
+                      isCurrentUser ? "text-[#06b6d4]" : "text-black"
                     }`}
                   >
                     {user.pseudo} {isCurrentUser && "(toi)"}
@@ -103,7 +106,7 @@ export default function AmisScreen() {
                   >
                     {altitude}
                   </Text>
-                  <Text className="text-white/30 text-[8px]">altitude</Text>
+                  <Text className="text-black/30 text-[8px]">altitude</Text>
                 </View>
               </Pressable>
             );
@@ -111,12 +114,12 @@ export default function AmisScreen() {
         </View>
 
         {selectedUser && (
-          <View className="bg-space-card/80 border border-space-border rounded-2xl p-4 mb-4">
-            <Text className="text-white/60 text-xs font-bold tracking-widest uppercase mb-3">
+          <View className="bg-[#f8f9fa] border-2 border-black rounded-xl p-4 mb-4 shadow-[2px_4px_0px_0px_rgba(0,0,0,1)]">
+            <Text className="text-black/60 text-xs font-bold tracking-widest uppercase mb-3">
               Capsules avec {selectedUser.pseudo}
             </Text>
             {capsulesWithSelected.length === 0 ? (
-              <Text className="text-white/30 text-sm">Aucune capsule en commun</Text>
+              <Text className="text-black/30 text-sm">Aucune capsule en commun</Text>
             ) : (
               capsulesWithSelected.map((c) => {
                 const isCreditor = c.creditor_id === currentUserId;
@@ -124,17 +127,17 @@ export default function AmisScreen() {
                   ? `→ Tu réclames à ${selectedUser.pseudo}`
                   : `← ${selectedUser.pseudo} te réclame`;
                 return (
-                  <View key={c.id} className="mb-3 pb-3 border-b border-space-border last:border-b-0">
-                    <Text className="text-white/60 text-[10px] mb-1">{direction}</Text>
+                  <View key={c.id} className="mb-3 pb-3 border-b border-black/10 last:border-b-0">
+                    <Text className="text-black/60 text-[10px] mb-1">{direction}</Text>
                     <View className="flex-row items-center gap-2">
-                      <View className="bg-neon-green/10 border border-neon-green/30 rounded px-2 py-0.5">
-                        <Text className="text-neon-green text-[10px] font-bold">
+                      <View className="bg-[#4ade80]/10 border border-[#4ade80]/30 rounded px-2 py-0.5">
+                        <Text className="text-[#4ade80] text-[10px] font-bold">
                           {c.drink_type}
                         </Text>
                       </View>
-                      <Text className="text-white/70 text-xs flex-1">{c.reason}</Text>
+                      <Text className="text-black/70 text-xs flex-1">{c.reason}</Text>
                     </View>
-                    <Text className="text-white/30 text-[10px] mt-1">
+                    <Text className="text-black/30 text-[10px] mt-1">
                       {STATUS_LABELS[c.status]}
                     </Text>
                   </View>
