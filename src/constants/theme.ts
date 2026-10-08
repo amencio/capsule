@@ -13,17 +13,35 @@ export const COLORS = {
     redDark: "#CC2F26",
     yellow: "#FFD60A",
     cyan: "#00F0FF",
+    orange: "#FF6B1A",
+    orangeDark: "#CC5515",
+  },
+  earth: {
+    blue: "#1B4D8C",
+    dark: "#0A2A4A",
+    green: "#2A7F3E",
   },
 } as const;
 
 export const STATUS_LABELS = {
   pending: "EN ATTENTE",
-  active: "EN ORBITE",
-  paid: "DÉCAPSULÉ",
+  active: "CARBURANT",
+  pending_launch: "DÉCOLLAGE...",
+  resolved: "DÉCOLLÉ",
 } as const;
 
 export const STATUS_COLORS = {
   pending: COLORS.neon.yellow,
   active: COLORS.neon.green,
-  paid: COLORS.neon.red,
+  pending_launch: COLORS.neon.orange,
+  resolved: COLORS.neon.cyan,
 } as const;
+
+export const DRINK_TYPES = [
+  "Get 27",
+  "Pinte",
+  "Demousseur",
+  "Shot",
+  "Verre de vin",
+  "Café",
+] as const;

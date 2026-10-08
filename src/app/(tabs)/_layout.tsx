@@ -1,9 +1,9 @@
 import { Tabs } from "expo-router";
-import { Orbit, Beer, Rocket } from "lucide-react-native";
+import { LayoutDashboard, Activity, Users, User } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/theme";
 import { useAuthContext } from "../../context/AuthProvider";
-import { useTicketsRealtime } from "../../hooks/useTickets";
+import { useCapsulesRealtime } from "../../hooks/useCapsules";
 import { useProfilesRealtime } from "../../hooks/useProfiles";
 
 export default function TabsLayout() {
@@ -11,7 +11,7 @@ export default function TabsLayout() {
   const { profile } = useAuthContext();
   const userId = profile?.id;
 
-  useTicketsRealtime(userId);
+  useCapsulesRealtime(userId);
   useProfilesRealtime(userId);
 
   return (
@@ -28,7 +28,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: COLORS.neon.green,
         tabBarInactiveTintColor: "#666",
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: "700",
         },
       }}
@@ -36,27 +36,36 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Orbite",
+          title: "Dashboard",
           tabBarIcon: ({ color, size }) => (
-            <Orbit color={color} size={size} />
+            <LayoutDashboard color={color} size={size} />
           ),
         }}
       />
       <Tabs.Screen
-        name="frigo"
+        name="activite"
         options={{
-          title: "Frigo",
+          title: "Activité",
           tabBarIcon: ({ color, size }) => (
-            <Beer color={color} size={size} />
+            <Activity color={color} size={size} />
           ),
         }}
       />
       <Tabs.Screen
-        name="lancer"
+        name="amis"
         options={{
-          title: "Lancer",
+          title: "Amis",
           tabBarIcon: ({ color, size }) => (
-            <Rocket color={color} size={size} />
+            <Users color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profil"
+        options={{
+          title: "Profil",
+          tabBarIcon: ({ color, size }) => (
+            <User color={color} size={size} />
           ),
         }}
       />

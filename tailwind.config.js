@@ -22,6 +22,13 @@ module.exports = {
           redDark: "#CC2F26",
           yellow: "#FFD60A",
           cyan: "#00F0FF",
+          orange: "#FF6B1A",
+          orangeDark: "#CC5515",
+        },
+        earth: {
+          blue: "#1B4D8C",
+          dark: "#0A2A4A",
+          green: "#2A7F3E",
         },
       },
       fontFamily: {

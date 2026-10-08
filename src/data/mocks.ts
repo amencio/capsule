@@ -1,0 +1,135 @@
+import type { UserProfile, Capsule } from "../types";
+
+export const MOCK_USERS: UserProfile[] = [
+  { id: "u1", pseudo: "Thomas", avatar_url: "https://i.pravatar.cc/100?img=12", solde_global: 0 },
+  { id: "u2", pseudo: "Léa", avatar_url: "https://i.pravatar.cc/100?img=5", solde_global: 0 },
+  { id: "u3", pseudo: "Camille", avatar_url: "https://i.pravatar.cc/100?img=47", solde_global: 0 },
+];
+
+export const MOCK_CAPSULES: Capsule[] = [
+  {
+    id: "c1",
+    creditor_id: "u1",
+    debtor_id: "u2",
+    drink_type: "Get 27",
+    amount: 1,
+    reason: "Pari Ligue 1 !",
+    status: "pending",
+    created_at: "2026-10-08T10:00:00Z",
+    resolved_at: null,
+  },
+  {
+    id: "c2",
+    creditor_id: "u1",
+    debtor_id: "u3",
+    drink_type: "Pinte",
+    amount: 2,
+    reason: "Thomas a trinqué trop fort",
+    status: "active",
+    created_at: "2026-10-07T18:30:00Z",
+    resolved_at: null,
+  },
+  {
+    id: "c3",
+    creditor_id: "u2",
+    debtor_id: "u1",
+    drink_type: "Get 27",
+    amount: 1,
+    reason: "Perdu au babyfoot",
+    status: "active",
+    created_at: "2026-10-06T20:00:00Z",
+    resolved_at: null,
+  },
+  {
+    id: "c4",
+    creditor_id: "u2",
+    debtor_id: "u1",
+    drink_type: "Get 27",
+    amount: 1,
+    reason: "Léa a gagné au karting",
+    status: "resolved",
+    created_at: "2026-10-04T21:00:00Z",
+    resolved_at: "2026-10-05T19:30:00Z",
+  },
+  {
+    id: "c5",
+    creditor_id: "u2",
+    debtor_id: "u3",
+    drink_type: "Pinte",
+    amount: 1,
+    reason: "Camille a oublié son tour",
+    status: "resolved",
+    created_at: "2026-10-01T17:00:00Z",
+    resolved_at: "2026-10-03T19:30:00Z",
+  },
+  {
+    id: "c6",
+    creditor_id: "u3",
+    debtor_id: "u1",
+    drink_type: "Pinte",
+    amount: 1,
+    reason: "Apéro fin de mission",
+    status: "resolved",
+    created_at: "2026-09-28T17:00:00Z",
+    resolved_at: "2026-09-30T20:00:00Z",
+  },
+  {
+    id: "c7",
+    creditor_id: "u3",
+    debtor_id: "u2",
+    drink_type: "Shot",
+    amount: 1,
+    reason: "Léa a oublié son anniversaire",
+    status: "resolved",
+    created_at: "2026-09-25T17:00:00Z",
+    resolved_at: "2026-09-27T19:30:00Z",
+  },
+  {
+    id: "c8",
+    creditor_id: "u3",
+    debtor_id: "u1",
+    drink_type: "Pinte",
+    amount: 1,
+    reason: "Thomas a parié sur le mauvais match",
+    status: "resolved",
+    created_at: "2026-09-20T17:00:00Z",
+    resolved_at: "2026-09-22T19:30:00Z",
+  },
+  {
+    id: "c9",
+    creditor_id: "u1",
+    debtor_id: "u2",
+    drink_type: "Get 27",
+    amount: 1,
+    reason: "Thomas a décapsulé — en attente de Houston",
+    status: "pending_launch",
+    created_at: "2026-10-08T15:00:00Z",
+    resolved_at: null,
+  },
+  {
+    id: "c10",
+    creditor_id: "u2",
+    debtor_id: "u1",
+    drink_type: "Pinte",
+    amount: 1,
+    reason: "Léa veut décoller — Thomas doit autoriser",
+    status: "pending_launch",
+    created_at: "2026-10-08T14:30:00Z",
+    resolved_at: null,
+  },
+];
+
+export const MOCK_PROFILES_MAP: Record<string, UserProfile> = Object.fromEntries(
+  MOCK_USERS.map((u) => [u.id, u])
+);
+
+export const CURRENT_USER_ID = "u1";
+
+export const DRINK_EMOJIS: Record<string, string> = {
+  "Get 27": "🍸",
+  Pinte: "🍺",
+  Demousseur: "🍻",
+  Shot: "🥃",
+  "Verre de vin": "🍷",
+  Café: "☕",
+};
