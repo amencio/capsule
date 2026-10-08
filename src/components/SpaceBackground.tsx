@@ -46,9 +46,9 @@ export function SpaceBackground({ width: propWidth, height: propHeight }: SpaceB
   const width = propWidth ?? screenWidth;
   const height = propHeight ?? screenHeight;
 
-  const earthR = width * 0.7;
+  const earthR = width * 0.45;
   const earthCx = width * 0.5;
-  const earthCy = height + earthR * 0.55;
+  const earthCy = height + earthR * 0.65;
 
   const stars = useMemo(
     () => STARS.filter((s) => s.cx < width && s.cy < height - earthR * 0.35),

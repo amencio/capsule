@@ -18,22 +18,6 @@ import {
 import { calculateAltitudeForAll } from "../../utils/karma";
 import type { Capsule, UserProfile } from "../../types";
 
-const HARD_SHADOW_ORANGE = {
-  shadowColor: "#000",
-  shadowOffset: { width: 4, height: 6 },
-  shadowOpacity: 1,
-  shadowRadius: 0,
-  elevation: 7,
-};
-
-const HARD_SHADOW_ORANGE_PRESSED = {
-  shadowColor: "#000",
-  shadowOffset: { width: 2, height: 2 },
-  shadowOpacity: 1,
-  shadowRadius: 0,
-  elevation: 3,
-};
-
 export default function DashboardScreen() {
   const [currentUserId, setCurrentUserId] = useState(CURRENT_USER_ID);
   const [capsules, setCapsules] = useState<Capsule[]>(MOCK_CAPSULES);
@@ -158,12 +142,7 @@ export default function DashboardScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
               setLaunchVisible(true);
             }}
-            className="rounded-2xl border-2 border-black px-4 py-4 mb-4"
-            style={({ pressed }) => ({
-              backgroundColor: "#f97316",
-              ...(pressed ? HARD_SHADOW_ORANGE_PRESSED : HARD_SHADOW_ORANGE),
-              transform: pressed ? [{ translateY: 2 }] : [],
-            })}
+            className="bg-[#f97316] text-white font-black border-2 border-black rounded-2xl px-4 py-4 mb-4 shadow-[4px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
           >
             <Text className="text-white font-black text-sm uppercase text-center tracking-wide">
               LANCER UNE{"\n"}CAPSULE ! 🚀
