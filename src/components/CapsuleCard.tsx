@@ -20,7 +20,7 @@ interface CapsuleCardProps {
   profiles: Record<string, UserProfile>;
   onAccept?: (id: string) => void;
   onRefuse?: (id: string) => void;
-  onDecapsuler?: (id: string) => void;
+  onRequestLaunch?: (id: string) => void;
   onAuthorize?: (id: string) => void;
   isPending?: boolean;
 }
@@ -31,7 +31,7 @@ export function CapsuleCard({
   profiles,
   onAccept,
   onRefuse,
-  onDecapsuler,
+  onRequestLaunch,
   onAuthorize,
   isPending = false,
 }: CapsuleCardProps) {
@@ -42,7 +42,7 @@ export function CapsuleCard({
   const statusColor = STATUS_COLORS[capsule.status];
   const drinkEmoji = DRINK_EMOJIS[capsule.drink_type] ?? "🍹";
 
-  const isLaunchAlert = capsule.status === "pending_launch" && !isCreditor;
+  const isLaunchAlert = capsule.status === "launch_requested" && !isCreditor;
 
   const borderOpacity = useSharedValue(1);
 
@@ -148,7 +148,7 @@ export function CapsuleCard({
 
       {capsule.status === "active" && isCreditor && (
         <Pressable
-          onPress={() => onDecapsuler?.(capsule.id)}
+          onPress={() => onRequestLaunch?.(capsule.id)}
           disabled={isPending}
           className="mt-3 py-3 items-center rounded-lg border-2 border-black bg-[#4ade80] shadow-[2px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
         >
@@ -156,7 +156,7 @@ export function CapsuleCard({
             <ActivityIndicator size="small" color="#000" />
           ) : (
             <Text className="text-black text-sm font-bold uppercase tracking-wide">
-              🚀 PRÉPARER LE DÉCOLLAGE
+              🔥 DEMANDER LA MISE À FEU
             </Text>
           )}
         </Pressable>
@@ -164,21 +164,21 @@ export function CapsuleCard({
 
       {capsule.status === "active" && !isCreditor && (
         <Text className="text-xs mt-2 italic text-gray-500">
-          Carburant prêt — en attente de décollage...
+          Carburant prêt — en attente de mise à feu...
         </Text>
       )}
 
-      {capsule.status === "pending_launch" && isCreditor && (
+      {capsule.status === "launch_requested" && isCreditor && (
         <View
           className="mt-3 py-3 items-center rounded-lg border-2 border-black bg-[#9ca3af] shadow-[2px_4px_0px_0px_rgba(0,0,0,1)]"
         >
           <Text className="text-white text-sm font-bold uppercase tracking-wide">
-            ⏳ En attente de Houston...
+            ⏳ En attente de validation...
           </Text>
         </View>
       )}
 
-      {capsule.status === "pending_launch" && !isCreditor && (
+      {capsule.status === "launch_requested" && !isCreditor && (
         <Pressable
           onPress={() => onAuthorize?.(capsule.id)}
           disabled={isPending}
@@ -195,8 +195,29 @@ export function CapsuleCard({
       )}
 
       {capsule.status === "resolved" && (
-        <Text className="text-xs mt-2 italic" style={{ color: "#0891b2" }}>
-          Capsule décollée ✅
+        <View className="flex-row items-center gap-2 mt-2">
+          <Text className="text-xs italic" style={{ color: "#0891b2" }}>
+            Capsule décollée ✅
+          </Text>
+          {capsule.resolution && (
+            <View className="rounded-full px-2 py-0.5 border border-black/30 bg-black/5">
+              <Text className="text-[8px] font-bold text-black/50">
+                {capsule.resolution === "forced" ? "FORCÉ" : "VALIDÉ"}
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {capsule.status === "rejected" && (
+        <Text className="text-xs mt-2 italic" style={{ color: "#f87171" }}>
+          Demande refusée 🚫
+        </Text>
+      )}
+
+      {capsule.status === "expired" && (
+        <Text className="text-xs mt-2 italic text-gray-400">
+          Demande expirée ⏳
         </Text>
       )}
     </Animated.View>

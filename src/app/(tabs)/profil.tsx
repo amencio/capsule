@@ -13,7 +13,7 @@ export default function ProfilScreen() {
     capsules,
     currentUserId,
     altitude,
-    carburantDisponible,
+    tankLevel,
     karma,
     rank,
   } = useCapsuleStore();
@@ -108,7 +108,7 @@ export default function ProfilScreen() {
           </View>
           <View className="flex-1 bg-[#f8f9fa] border-2 border-black rounded-xl p-4 items-center shadow-[2px_4px_0px_0px_rgba(0,0,0,1)]">
             <Text className="text-[#4ade80] text-3xl font-bold">
-              {carburantDisponible}
+              {tankLevel}
             </Text>
             <Text className="text-black/50 text-xs mt-1">⛽ Carburant</Text>
           </View>

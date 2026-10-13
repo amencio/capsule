@@ -32,6 +32,7 @@ export const COLORS = {
     grey: "#9ca3af",
     amber: "#92400e",
     steel: "#0891b2",
+    navy: "#1e3a5f",
     black: "#000000",
   },
 } as const;
@@ -43,15 +44,19 @@ export const HARD_SHADOW_SM = "shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]";
 export const STATUS_LABELS = {
   pending: "EN ATTENTE",
   active: "CARBURANT",
-  pending_launch: "DÉCOLLAGE...",
+  launch_requested: "MISE À FEU…",
   resolved: "DÉCOLLÉ",
+  rejected: "REFUSÉE",
+  expired: "EXPIRÉE",
 } as const;
 
 export const STATUS_COLORS = {
   pending: COLORS.neon.yellow,
   active: COLORS.neon.green,
-  pending_launch: COLORS.neon.orange,
+  launch_requested: COLORS.neon.orange,
   resolved: COLORS.neon.cyan,
+  rejected: COLORS.neon.red,
+  expired: COLORS.cartoon.grey,
 } as const;
 
 export const DRINK_TYPES = [

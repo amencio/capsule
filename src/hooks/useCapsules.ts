@@ -10,6 +10,7 @@ import {
   refuseCapsule,
   requestLaunchCapsule,
   authorizeLaunchCapsule,
+  forceLaunchCapsule,
 } from "../services/capsules";
 import type { Capsule } from "../types";
 
@@ -80,6 +81,13 @@ export function useCapsules(userId: string | undefined) {
     },
   });
 
+  const forceLaunch = useMutation({
+    mutationFn: (capsuleId: string) => forceLaunchCapsule(capsuleId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["capsules"] });
+    },
+  });
+
   return {
     activeCapsules: activeQuery.data ?? [],
     pendingCapsules: pendingQuery.data ?? [],
@@ -90,6 +98,7 @@ export function useCapsules(userId: string | undefined) {
     refuse,
     requestLaunch,
     authorizeLaunch,
+    forceLaunch,
   };
 }
 

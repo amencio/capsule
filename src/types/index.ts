@@ -5,7 +5,15 @@ export interface UserProfile {
   solde_global: number;
 }
 
-export type CapsuleStatus = "pending" | "active" | "pending_launch" | "resolved";
+export type CapsuleStatus =
+  | "pending"
+  | "active"
+  | "launch_requested"
+  | "resolved"
+  | "rejected"
+  | "expired";
+
+export type CapsuleResolution = "validated" | "forced" | null;
 
 export interface Capsule {
   id: string;
@@ -17,13 +25,7 @@ export interface Capsule {
   status: CapsuleStatus;
   created_at: string;
   resolved_at: string | null;
-}
-
-export interface CapsuleTicket {
-  id: string;
-  from_user: string;
-  to_user: string;
-  motif: string;
-  status: "pending" | "active" | "paid";
-  created_at: string;
+  expires_at: string | null;
+  launch_requested_at: string | null;
+  resolution: CapsuleResolution;
 }

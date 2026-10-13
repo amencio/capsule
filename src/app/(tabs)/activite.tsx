@@ -12,9 +12,11 @@ type FilterType = "all" | CapsuleStatus;
 const FILTERS: { label: string; value: FilterType }[] = [
   { label: "Tout", value: "all" },
   { label: "En attente", value: "pending" },
-  { label: "En orbite", value: "active" },
-  { label: "Lancement", value: "pending_launch" },
+  { label: "Carburant", value: "active" },
+  { label: "Mise à feu", value: "launch_requested" },
   { label: "Résolues", value: "resolved" },
+  { label: "Refusées", value: "rejected" },
+  { label: "Expirées", value: "expired" },
 ];
 
 export default function ActiviteScreen() {
@@ -23,8 +25,8 @@ export default function ActiviteScreen() {
     pendingActionId,
     handleAccept,
     handleRefuse,
-    handleDecapsuler,
-    handleAuthorize,
+    handleRequestLaunch,
+    handleAuthorizeLaunch,
     allUserCapsules,
     altitude,
     profilesMap,
@@ -43,34 +45,40 @@ export default function ActiviteScreen() {
       <View className="px-4 pt-4 pb-2 z-10">
         <Text className="text-white text-xl font-bold">Activité</Text>
         <Text className="text-white/40 text-xs mt-0.5">
-          Historique complet — Altitude: {altitude}
+          Historique complet — Altitude: +{altitude}
         </Text>
       </View>
 
-      <View className="flex-row flex-wrap px-4 pb-3 z-10">
-        {FILTERS.map((f) => (
-          <Pressable
-            key={f.value}
-            onPress={() => {
-              setFilter(f.value);
-              Haptics.selectionAsync();
-            }}
-            className={`mr-2 mb-1 px-3 py-1.5 rounded-lg border-2 border-black ${
-              filter === f.value
-                ? "bg-[#4ade80]"
-                : "bg-[#f8f9fa] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-            }`}
-          >
-            <Text
-              className={`text-xs font-bold ${
-                filter === f.value ? "text-black" : "text-black/50"
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="px-4 pb-3 z-10"
+      >
+        <View className="flex-row gap-2">
+          {FILTERS.map((f) => (
+            <Pressable
+              key={f.value}
+              onPress={() => {
+                setFilter(f.value);
+                Haptics.selectionAsync();
+              }}
+              className={`px-3 py-1.5 rounded-lg border-2 border-black ${
+                filter === f.value
+                  ? "bg-[#4ade80]"
+                  : "bg-[#f8f9fa] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
               }`}
             >
-              {f.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+              <Text
+                className={`text-xs font-bold ${
+                  filter === f.value ? "text-black" : "text-black/50"
+                }`}
+              >
+                {f.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
 
       <ScrollView
         contentContainerClassName="px-4 pb-8 z-10"
@@ -89,8 +97,8 @@ export default function ActiviteScreen() {
               profiles={profilesMap}
               onAccept={handleAccept}
               onRefuse={handleRefuse}
-              onDecapsuler={handleDecapsuler}
-              onAuthorize={handleAuthorize}
+              onRequestLaunch={handleRequestLaunch}
+              onAuthorize={handleAuthorizeLaunch}
               isPending={pendingActionId === capsule.id}
             />
           ))
