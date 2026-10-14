@@ -152,7 +152,7 @@ function LaunchAlertModalInner({
               demande l&apos;allumage pour
             </Text>
             <Text className="text-black text-xl font-black mt-1">
-              {currentRequest.amount}× {currentRequest.drink_type} {drinkEmoji}
+              {currentRequest.drink_type} {drinkEmoji}
             </Text>
             <Text className="text-black/50 text-xs mt-2 italic text-center">
               &ldquo;{currentRequest.reason}&rdquo;

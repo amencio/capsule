@@ -4,14 +4,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { SpaceBackground } from "../../components/SpaceBackground";
 import { CapsuleLogo } from "../../components/CapsuleLogo";
 import { ProfileSwitcher } from "../../components/ProfileSwitcher";
-import { Radar } from "../../components/Radar";
-import { CapsuleShip } from "../../components/CapsuleShip";
+import { UserStatusCard } from "../../components/UserStatusCard";
+import { TrajectoryMap } from "../../components/TrajectoryMap";
 import { TableauBord } from "../../components/TableauBord";
 import { DemanderModal } from "../../components/DemanderModal";
 import { AllumageModal } from "../../components/AllumageModal";
 import { RavitaillementModal } from "../../components/RavitaillementModal";
 import { LaunchAlertModal } from "../../components/LaunchAlertModal";
+import { RavitaillementAlertModal } from "../../components/RavitaillementAlertModal";
 import { useCapsuleStore } from "../../context/CapsuleProvider";
+import { useModalQueue } from "../../context/ModalQueueContext";
 
 export default function CockpitScreen() {
   const {
@@ -39,10 +41,11 @@ export default function CockpitScreen() {
     pendingRequestsCount,
   } = useCapsuleStore();
 
+  const { currentItem, enqueue, dismiss, isDismissed, clearDismissed } = useModalQueue();
+
   const [demanderVisible, setDemanderVisible] = useState(false);
   const [allumageVisible, setAllumageVisible] = useState(false);
   const [ravitaillementVisible, setRavitaillementVisible] = useState(false);
-  const [launchAlertVisible, setLaunchAlertVisible] = useState(false);
 
   useEffect(() => {
     handleExpiryCheck();
@@ -50,11 +53,29 @@ export default function CockpitScreen() {
   }, [handleExpiryCheck, handleLaunchTimeoutCheck]);
 
   useEffect(() => {
-    if (incomingLaunchRequests.length > 0 && !launchAlertVisible && !allumageVisible && !ravitaillementVisible) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLaunchAlertVisible(true);
-    }
-  }, [incomingLaunchRequests.length, launchAlertVisible, allumageVisible, ravitaillementVisible]);
+    incomingLaunchRequests.forEach((c) => {
+      clearDismissed(c.id);
+      enqueue({ id: c.id, type: "launch" });
+    });
+  }, [incomingLaunchRequests, enqueue, clearDismissed]);
+
+  useEffect(() => {
+    receivedFuelRequests.forEach((c) => {
+      if (!isDismissed(c.id)) {
+        enqueue({ id: c.id, type: "ravitaillement" });
+      }
+    });
+  }, [receivedFuelRequests, enqueue, isDismissed]);
+
+  useEffect(() => {
+    const pendingIds = new Set(receivedFuelRequests.map((c) => c.id));
+    const launchIds = new Set(incomingLaunchRequests.map((c) => c.id));
+    [...incomingLaunchRequests, ...receivedFuelRequests].forEach((c) => {
+      if (!pendingIds.has(c.id) && !launchIds.has(c.id)) {
+        clearDismissed(c.id);
+      }
+    });
+  }, [receivedFuelRequests, incomingLaunchRequests, clearDismissed]);
 
   const currentUser = friends.find((f) => f.id === currentUserId);
 
@@ -76,21 +97,17 @@ export default function CockpitScreen() {
         />
       </View>
 
-      <View className="flex-1 flex-row px-2 z-10">
-        <View className="w-1/3 items-center justify-start pt-2">
-          <Radar currentUserId={currentUserId} markers={markers} />
-        </View>
+      <View className="flex-1 flex-col px-4 z-10 gap-3 pt-2">
+        {currentUser && (
+          <UserStatusCard
+            user={currentUser}
+            altitude={altitude}
+            tankLevel={tankLevel}
+            rank={rank}
+          />
+        )}
 
-        <View className="w-2/3 items-center justify-center">
-          {currentUser && (
-            <CapsuleShip
-              user={currentUser}
-              altitude={altitude}
-              tankLevel={tankLevel}
-              rank={rank}
-            />
-          )}
-        </View>
+        <TrajectoryMap currentUserId={currentUserId} markers={markers} />
       </View>
 
       <TableauBord
@@ -133,14 +150,29 @@ export default function CockpitScreen() {
         getCreditorTankLevel={getCreditorTankLevel}
       />
 
-      <LaunchAlertModal
-        visible={launchAlertVisible}
-        incomingLaunchRequests={incomingLaunchRequests}
-        profilesMap={profilesMap}
-        pendingActionId={pendingActionId}
-        onAuthorize={handleAuthorizeLaunch}
-        onDismiss={() => setLaunchAlertVisible(false)}
-      />
+      {currentItem?.type === "launch" && (
+        <LaunchAlertModal
+          visible
+          incomingLaunchRequests={incomingLaunchRequests}
+          profilesMap={profilesMap}
+          pendingActionId={pendingActionId}
+          onAuthorize={handleAuthorizeLaunch}
+          onDismiss={() => dismiss(currentItem.id)}
+        />
+      )}
+
+      {currentItem?.type === "ravitaillement" && (
+        <RavitaillementAlertModal
+          visible
+          capsule={receivedFuelRequests.find((c) => c.id === currentItem.id) ?? null}
+          profilesMap={profilesMap}
+          pendingActionId={pendingActionId}
+          onAccept={handleAccept}
+          onRefuse={handleRefuse}
+          onDismiss={() => dismiss(currentItem.id)}
+          getCreditorTankLevel={getCreditorTankLevel}
+        />
+      )}
     </SafeAreaView>
   );
 }

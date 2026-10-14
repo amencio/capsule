@@ -120,7 +120,7 @@ export function RavitaillementModal({
                         {creditorName}
                       </Text>
                       <Text className="text-black/50 text-xs">
-                        {capsule.amount}× {capsule.drink_type} {drinkEmoji}
+                        {capsule.drink_type} {drinkEmoji}
                       </Text>
                     </View>
                     <View className="bg-[#fbbf24]/20 border border-[#fbbf24] rounded-lg px-2 py-0.5">

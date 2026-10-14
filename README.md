@@ -97,3 +97,59 @@ src/
 - **Commit style** : Conventional Commits anglais (`feat:`, `fix:`, `refactor:`, `docs:`)
 
 Voir `context.md` pour la documentation complète (architecture, bug history, conventions, tâches).
+
+## Développement — WSL2 + Expo Go
+
+Expo Go ne peut pas atteindre Metro directement sous WSL2 (IP virtuelle `172.x.x.x` non accessible depuis le téléphone). Trois solutions :
+
+### Option A — Port forwarding Windows → WSL2 (recommandé)
+
+Dans un **PowerShell administrateur** sur Windows :
+
+```powershell
+# Récupérer l'IP WSL2
+$wslIp = wsl hostname -I
+
+# Forward port 8081
+netsh interface portproxy add v4tov4 listenport=8081 listenaddress=0.0.0.0 connectport=8081 connectaddress=$wslIp
+
+# Ouvrir le firewall Windows
+New-NetFirewallRule -DisplayName "Expo Metro" -Direction Inbound -LocalPort 8081 -Protocol TCP -Action Allow
+
+# Vérifier
+netsh interface portproxy show v4tov4
+```
+
+Puis dans WSL2 :
+```bash
+npx expo start --clear
+```
+
+Dans Expo Go sur le téléphone → "Enter URL manually" → `http://<IP_WINDOWS>:8081`
+
+### Option B — WSL2 mirrored networking (Windows 11 22H2+)
+
+Créer/modifier `%USERPROFILE%/.wslconfig` :
+```ini
+[wsl2]
+networkingMode=mirrored
+```
+
+Redémarrer WSL :
+```powershell
+wsl --shutdown
+```
+
+L'IP WSL devient l'IP Windows → le téléphone accède directement à Metro. Lancer `npx expo start --clear` et scanner le QR code.
+
+### Option C — Tunnel ngrok (`--tunnel`)
+
+```bash
+npx expo start --clear --tunnel
+```
+
+Instable en 2026 (restrictions ngrok gratuit, outages fréquents). Préférer l'option A ou B.
+
+### Note
+
+Le warning `Cannot connect to Expo CLI` dans LogBox est un faux positif — le client HMR d'Expo perd parfois la connexion au dev server via le tunnel. Il est ignoré via `LogBox.ignoreLogs` dans `_layout.tsx`.

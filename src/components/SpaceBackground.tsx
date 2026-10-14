@@ -41,13 +41,9 @@ export function SpaceBackground() {
   const width = screenWidth;
   const height = screenHeight;
 
-  const earthR = width * 0.45;
-  const earthCx = width * 0.5;
-  const earthCy = height + earthR * 0.65;
-
   const stars = useMemo(
-    () => STARS.filter((s) => s.cx < width && s.cy < height - earthR * 0.35),
-    [width, height, earthR]
+    () => STARS.filter((s) => s.cx < width && s.cy < height),
+    [width, height]
   );
 
   return (
@@ -73,12 +69,6 @@ export function SpaceBackground() {
 
         <Circle cx={width * 0.85} cy={height * 0.06} r={2.5} fill="#00F0FF" opacity={0.8} />
         <Circle cx={width * 0.15} cy={height * 0.04} r={2} fill="white" opacity={0.9} />
-
-        <Circle cx={earthCx} cy={earthCy} r={earthR} fill="#1B4D8C" opacity={0.85} />
-        <Circle cx={earthCx - earthR * 0.3} cy={earthCy - earthR * 0.35} r={earthR * 0.22} fill="#2A7F3E" opacity={0.35} />
-        <Circle cx={earthCx + earthR * 0.15} cy={earthCy - earthR * 0.45} r={earthR * 0.16} fill="#2A7F3E" opacity={0.3} />
-        <Circle cx={earthCx + earthR * 0.35} cy={earthCy - earthR * 0.1} r={earthR * 0.12} fill="#2A7F3E" opacity={0.25} />
-        <Circle cx={earthCx - earthR * 0.1} cy={earthCy - earthR * 0.15} r={earthR * 0.1} fill="#2A7F3E" opacity={0.2} />
       </Svg>
     </View>
   );

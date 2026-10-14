@@ -17,7 +17,7 @@ export default function AmisScreen() {
   const allAltitudes = friends.map((user) => {
     const altitude = capsules
       .filter((c) => c.status === "resolved" && c.creditor_id === user.id)
-      .reduce((sum, c) => sum + c.amount, 0);
+      .length;
     return { user, altitude };
   });
   allAltitudes.sort((a, b) => b.altitude - a.altitude);
@@ -124,8 +124,8 @@ export default function AmisScreen() {
               capsulesWithSelected.map((c) => {
                 const isCreditor = c.creditor_id === currentUserId;
                 const direction = isCreditor
-                  ? `→ Tu réclames à ${selectedUser.pseudo}`
-                  : `← ${selectedUser.pseudo} te réclame`;
+                  ? `→ ${selectedUser.pseudo} doit te ravitailler en ${c.drink_type}`
+                  : `← ${selectedUser.pseudo} attend ton ravitaillement en ${c.drink_type}`;
                 return (
                   <View key={c.id} className="mb-3 pb-3 border-b border-black/10 last:border-b-0">
                     <Text className="text-black/60 text-[10px] mb-1">{direction}</Text>

@@ -132,10 +132,10 @@ export default function ProfilScreen() {
           </Text>
           <Text className="text-black/40 text-xs mt-1">
             {karma > 0
-              ? "Tu es porté — les autres te doivent plus que tu ne dois."
+              ? "Tu es porté — les autres te doivent plus de carburant que tu n'en dois."
               : karma < 0
-              ? "Tu es plaqué au sol — tu dois plus que tu ne reçois."
-              : "Équilibre parfait entre dettes et crédits."}
+              ? "Tu es plaqué au sol — tu dois plus de carburant que tu n'en reçois."
+              : "Équilibre parfait — autant de carburant à donner qu'à recevoir."}
           </Text>
         </View>
 

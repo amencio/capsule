@@ -38,7 +38,6 @@ export async function createCapsule(params: {
   creditor_id: string;
   debtor_id: string;
   drink_type: string;
-  amount: number;
   reason: string;
 }): Promise<Capsule> {
   const { data, error } = await supabase
@@ -47,7 +46,7 @@ export async function createCapsule(params: {
       creditor_id: params.creditor_id,
       debtor_id: params.debtor_id,
       drink_type: params.drink_type,
-      amount: params.amount,
+      amount: 1,
       reason: params.reason,
       status: "pending",
       expires_at: computeExpiresAt(),

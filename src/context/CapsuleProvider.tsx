@@ -28,7 +28,7 @@ interface CapsuleStoreValue {
   handleRequestLaunch: (id: string) => void;
   handleAuthorizeLaunch: (id: string) => void;
   handleForceLaunch: (id: string) => void;
-  handleLaunch: (data: Omit<Capsule, "id" | "status" | "created_at" | "resolved_at" | "expires_at" | "launch_requested_at" | "resolution">) => void;
+  handleLaunch: (data: Omit<Capsule, "id" | "status" | "created_at" | "resolved_at" | "expires_at" | "launch_requested_at" | "resolution" | "amount">) => void;
   handleExpiryCheck: () => void;
   handleLaunchTimeoutCheck: () => void;
   receivedFuelRequests: Capsule[];
@@ -169,10 +169,11 @@ export function CapsuleProvider({ children }: { children: React.ReactNode }) {
   }, [showHoustonToast, updateCapsules]);
 
   const handleLaunch = useCallback(
-    (data: Omit<Capsule, "id" | "status" | "created_at" | "resolved_at" | "expires_at" | "launch_requested_at" | "resolution">) => {
+    (data: Omit<Capsule, "id" | "status" | "created_at" | "resolved_at" | "expires_at" | "launch_requested_at" | "resolution" | "amount">) => {
       const newCapsule: Capsule = {
         ...data,
         id: `c${Date.now()}`,
+        amount: 1,
         status: "pending",
         created_at: new Date().toISOString(),
         resolved_at: null,
@@ -293,7 +294,7 @@ export function CapsuleProvider({ children }: { children: React.ReactNode }) {
         TANK_MAX_CAPACITY,
         capsules.filter(
           (c) => c.status === "active" && c.creditor_id === currentUserId
-        ).reduce((sum, c) => sum + c.amount, 0)
+        ).reduce((sum, c) => sum + 1, 0)
       ),
     [capsules, currentUserId]
   );
@@ -302,7 +303,7 @@ export function CapsuleProvider({ children }: { children: React.ReactNode }) {
     () =>
       capsules.filter(
         (c) => c.status === "launch_requested" && c.creditor_id === currentUserId
-      ).reduce((sum, c) => sum + c.amount, 0),
+      ).reduce((sum, c) => sum + 1, 0),
     [capsules, currentUserId]
   );
 
@@ -336,7 +337,7 @@ export function CapsuleProvider({ children }: { children: React.ReactNode }) {
         TANK_MAX_CAPACITY,
         capsules.filter(
           (c) => c.status === "active" && c.creditor_id === userId
-        ).reduce((sum, c) => sum + c.amount, 0)
+        ).reduce((sum, c) => sum + 1, 0)
       ),
     [capsules]
   );

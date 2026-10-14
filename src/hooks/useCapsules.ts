@@ -42,7 +42,6 @@ export function useCapsules(userId: string | undefined) {
       creditor_id: string;
       debtor_id: string;
       drink_type: string;
-      amount: number;
       reason: string;
     }) => {
       if (!userId) throw new Error("No user");

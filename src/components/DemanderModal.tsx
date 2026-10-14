@@ -27,7 +27,7 @@ const SCREEN_H = Dimensions.get("window").height;
 interface DemanderModalProps {
   visible: boolean;
   onClose: () => void;
-  onLaunch: (capsule: Omit<Capsule, "id" | "status" | "created_at" | "resolved_at" | "expires_at" | "launch_requested_at" | "resolution">) => void;
+  onLaunch: (capsule: Omit<Capsule, "id" | "status" | "created_at" | "resolved_at" | "expires_at" | "launch_requested_at" | "resolution" | "amount">) => void;
   friends: UserProfile[];
   currentUserId: string;
   getCreditorTankLevel: (userId: string) => number;
@@ -47,7 +47,6 @@ export function DemanderModal({
   const [drinkType, setDrinkType] = useState<string>(DRINK_TYPES[0]);
   const [customDrink, setCustomDrink] = useState("");
   const [reason, setReason] = useState("");
-  const [amount, setAmount] = useState(1);
 
   const slide = useSharedValue(0);
 
@@ -55,7 +54,7 @@ export function DemanderModal({
   const canLaunch = selectedId && reason.trim().length > 0;
   const selectedFriend = friends.find((f) => f.id === selectedId);
   const creditorTankFull = selectedFriend
-    ? getCreditorTankLevel(currentUserId) + amount > TANK_MAX_CAPACITY
+    ? getCreditorTankLevel(currentUserId) + 1 > TANK_MAX_CAPACITY
     : false;
   const creditorName = profilesMap[currentUserId]?.pseudo ?? "Toi";
 
@@ -81,7 +80,6 @@ export function DemanderModal({
       creditor_id: currentUserId,
       debtor_id: selectedId,
       drink_type: finalDrink,
-      amount,
       reason: reason.trim(),
     });
 
@@ -89,7 +87,6 @@ export function DemanderModal({
     setDrinkType(DRINK_TYPES[0]);
     setCustomDrink("");
     setReason("");
-    setAmount(1);
     onClose();
   }
 
@@ -186,29 +183,6 @@ export function DemanderModal({
               placeholderTextColor="rgba(0,0,0,0.25)"
               className="bg-white border-2 border-black rounded-xl px-4 py-2.5 text-black text-sm mb-4"
             />
-
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-black/50 text-xs font-bold tracking-wide uppercase">
-                Quantité
-              </Text>
-              <View className="flex-row items-center gap-4">
-                <Pressable
-                  onPress={() => setAmount(Math.max(1, amount - 1))}
-                  className="w-8 h-8 rounded-full bg-white border-2 border-black items-center justify-center"
-                >
-                  <Text className="text-black text-lg font-bold">−</Text>
-                </Pressable>
-                <Text className="text-black text-lg font-bold w-6 text-center">
-                  {amount}
-                </Text>
-                <Pressable
-                  onPress={() => setAmount(amount + 1)}
-                  className="w-8 h-8 rounded-full bg-white border-2 border-black items-center justify-center"
-                >
-                  <Text className="text-black text-lg font-bold">+</Text>
-                </Pressable>
-              </View>
-            </View>
 
             <Text className="text-black/50 text-xs font-bold tracking-wide uppercase mb-2">
               Motif

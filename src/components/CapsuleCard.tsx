@@ -96,8 +96,8 @@ export function CapsuleCard({
 
         <Text className="text-black text-xs font-bold">
           {isCreditor
-            ? `te doit ${capsule.amount} ${capsule.drink_type} ${drinkEmoji}`
-            : `tu dois ${capsule.amount} ${capsule.drink_type} ${drinkEmoji}`}
+            ? `${otherPseudo} doit te ravitailler en ${capsule.drink_type} ${drinkEmoji}`
+            : `${otherPseudo} attend ton ravitaillement en ${capsule.drink_type} ${drinkEmoji}`}
         </Text>
       </View>
 

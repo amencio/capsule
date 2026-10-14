@@ -366,6 +366,7 @@ L'app tourne sur mock data persistée via AsyncStorage :
 - **Selected capsule pattern** : stocker l'ID dans le state, dériver l'objet capsule depuis les props/store (évite les snapshots stale)
 - **`eslint-disable`** pour `react-hooks/set-state-in-effect` quand le setState dans un useEffect est légitime (mount-time checks, auto-open modales)
 - **`eslint-disable`** pour `react-hooks/immutability` sur les `sharedValue.value =` dans `useEffect` (Reanimated)
+- **`LogBox.ignoreLogs`** pour les warnings dev-only connus (HMR Expo CLI, etc.) dans `src/app/_layout.tsx`
 - **Commit style** : Conventional Commits anglais (`feat:`, `fix:`, `refactor:`, `docs:`)
 
 ---

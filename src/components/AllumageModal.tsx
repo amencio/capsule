@@ -156,7 +156,7 @@ export function AllumageModal({
               {debtor?.pseudo ?? "???"}
             </Text>
             <Text className="text-black/50 text-xs">
-              {capsule.amount}× {capsule.drink_type} {drinkEmoji}
+              {capsule.drink_type} {drinkEmoji}
             </Text>
           </View>
           <View className="rounded-full px-2 py-0.5 border border-black" style={{ backgroundColor: `${statusColor}30` }}>
