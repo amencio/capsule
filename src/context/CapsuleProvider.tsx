@@ -36,6 +36,7 @@ interface CapsuleStoreValue {
   incomingLaunchRequests: Capsule[];
   sentFuelRequests: Capsule[];
   allUserCapsules: Capsule[];
+  allFriendsCapsules: Capsule[];
   altitude: number;
   tankLevel: number;
   carburantEnCombustion: number;
@@ -283,6 +284,17 @@ export function CapsuleProvider({ children }: { children: React.ReactNode }) {
     [capsules, currentUserId]
   );
 
+  const allFriendsCapsules = useMemo(
+    () =>
+      capsules
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ),
+    [capsules]
+  );
+
   const altitude = useMemo(
     () => calculateAltitude(capsules, currentUserId),
     [capsules, currentUserId]
@@ -364,6 +376,7 @@ export function CapsuleProvider({ children }: { children: React.ReactNode }) {
     incomingLaunchRequests,
     sentFuelRequests,
     allUserCapsules,
+    allFriendsCapsules,
     altitude,
     tankLevel,
     carburantEnCombustion,

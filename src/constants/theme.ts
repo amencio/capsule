@@ -59,6 +59,21 @@ export const STATUS_COLORS = {
   expired: COLORS.cartoon.grey,
 } as const;
 
+export const ACTION_COLORS = {
+  ravitaillement: COLORS.neon.green,
+  mise_a_feu: COLORS.neon.orange,
+  refus: COLORS.neon.red,
+  en_attente: COLORS.neon.yellow,
+  resolu: COLORS.neon.cyan,
+  expire: COLORS.cartoon.grey,
+} as const;
+
+export const ROLE_COLORS = {
+  currentUser: COLORS.neon.cyan,
+  creditor: COLORS.neon.green,
+  debtor: COLORS.neon.orange,
+} as const;
+
 export const DRINK_TYPES = [
   "Get 27",
   "Pinte",

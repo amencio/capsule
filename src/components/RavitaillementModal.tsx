@@ -69,24 +69,24 @@ export function RavitaillementModal({
       </Pressable>
 
       <Animated.View
-        className="bg-[#f8f9fa] border-t-2 border-black rounded-t-3xl px-5 pt-3 pb-8"
+        className="bg-[#1a1a24] border-t-2 border-[#2E2E3A] rounded-t-3xl px-5 pt-3 pb-8"
         style={[{ position: "absolute", bottom: 0, left: 0, right: 0, maxHeight: "85%" }, sheetStyle]}
       >
-        <View className="w-12 h-1 bg-black/20 rounded-full self-center mb-4" />
+        <View className="w-12 h-1 bg-[#2E2E3A] rounded-full self-center mb-4" />
 
         <View className="flex-row items-center gap-2 mb-4">
-          <View className="w-8 h-8 rounded-full bg-[#1e3a5f] border-2 border-black items-center justify-center">
+          <View className="w-8 h-8 rounded-full bg-[#1A1A24] border-2 border-[#00FF66] items-center justify-center">
             <Text className="text-white text-sm font-bold">🛰️</Text>
           </View>
-          <Text className="text-black text-lg font-bold">
+          <Text className="text-white text-lg font-bold">
             RAVITAILLER LES AMIS
           </Text>
         </View>
 
         {receivedFuelRequests.length === 0 ? (
-          <View className="rounded-2xl p-6 items-center border-2 border-dashed border-black/20 bg-white mb-4">
-            <Text className="text-black/30 text-sm">Aucune demande en attente</Text>
-            <Text className="text-black/20 text-xs mt-1">
+          <View className="rounded-2xl p-6 items-center border-2 border-dashed border-[#2E2E3A] bg-[#22222E] mb-4">
+            <Text className="text-white/30 text-sm">Aucune demande en attente</Text>
+            <Text className="text-white/20 text-xs mt-1">
               Les demandes de carburant reçues apparaîtront ici
             </Text>
           </View>
@@ -103,40 +103,40 @@ export function RavitaillementModal({
               return (
                 <View
                   key={capsule.id}
-                  className="rounded-xl p-3 mb-3 border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                  className="rounded-xl p-3 mb-3 border-2 border-[#2E2E3A] bg-[#22222E]"
                 >
                   <View className="flex-row items-center gap-2.5 mb-2">
-                    <View className="w-9 h-9 rounded-full border-2 border-black overflow-hidden items-center justify-center bg-white">
+                    <View className="w-9 h-9 rounded-full border-2 border-[#2E2E3A] overflow-hidden items-center justify-center bg-[#22222E]">
                       {creditor?.avatar_url ? (
                         <Image source={{ uri: creditor.avatar_url }} style={{ width: 32, height: 32 }} contentFit="cover" />
                       ) : (
-                        <Text className="text-black text-xs font-bold">
+                        <Text className="text-white text-xs font-bold">
                           {creditorName.charAt(0).toUpperCase()}
                         </Text>
                       )}
                     </View>
                     <View className="flex-1">
-                      <Text className="text-black text-sm font-bold">
+                      <Text className="text-white text-sm font-bold">
                         {creditorName}
                       </Text>
-                      <Text className="text-black/50 text-xs">
+                      <Text className="text-white/50 text-xs">
                         {capsule.drink_type} {drinkEmoji}
                       </Text>
                     </View>
-                    <View className="bg-[#fbbf24]/20 border border-[#fbbf24] rounded-lg px-2 py-0.5">
-                      <Text className="text-[#92400e] text-[8px] font-bold">
+                    <View className="bg-[#FFD60A]/20 border border-[#FFD60A] rounded-lg px-2 py-0.5">
+                      <Text className="text-[#FFD60A] text-[8px] font-bold">
                         ⏳ {timeRemaining}
                       </Text>
                     </View>
                   </View>
 
-                  <Text className="text-black/40 text-xs mb-2.5 italic">
+                  <Text className="text-white/40 text-xs mb-2.5 italic">
                     {capsule.reason}
                   </Text>
 
                   {creditorTankFull ? (
-                    <View className="bg-[#fbbf24]/20 border-2 border-[#fbbf24] rounded-lg px-3 py-2">
-                      <Text className="text-[#92400e] text-xs font-bold text-center">
+                    <View className="bg-[#FFD60A]/20 border-2 border-[#FFD60A] rounded-lg px-3 py-2">
+                      <Text className="text-[#FFD60A] text-xs font-bold text-center">
                         ⚠️ Réservoir de {creditorName} plein ({TANK_MAX_CAPACITY}/{TANK_MAX_CAPACITY})
                       </Text>
                     </View>
@@ -148,7 +148,7 @@ export function RavitaillementModal({
                           onAccept(capsule.id);
                         }}
                         disabled={isPending}
-                        className="flex-1 rounded-lg py-2.5 items-center border-2 border-black bg-[#4ade80] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-0.5"
+                        className="flex-1 rounded-lg py-2.5 items-center border-2 border-[#00FF66] bg-[#00FF66] active:opacity-70"
                       >
                         {isPending ? (
                           <ActivityIndicator size="small" color="#000" />
@@ -162,9 +162,9 @@ export function RavitaillementModal({
                           onRefuse(capsule.id);
                         }}
                         disabled={isPending}
-                        className="flex-1 rounded-lg py-2.5 items-center border-2 border-black bg-[#f87171] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-0.5"
+                        className="flex-1 rounded-lg py-2.5 items-center border-2 border-[#FF3B30] bg-[#FF3B30]/15 active:opacity-70"
                       >
-                        <Text className="text-black text-xs font-bold">REFUSER</Text>
+                        <Text className="text-[#FF3B30] text-xs font-bold">REFUSER</Text>
                       </Pressable>
                     </View>
                   )}
@@ -176,9 +176,9 @@ export function RavitaillementModal({
 
         <Pressable
           onPress={onClose}
-          className="mt-3 rounded-xl border-2 border-black bg-white py-3 items-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-0.5"
+          className="mt-3 rounded-xl border-2 border-[#2E2E3A] bg-[#22222E] py-3 items-center active:opacity-70"
         >
-          <Text className="text-black/60 text-sm font-bold">Fermer</Text>
+          <Text className="text-white/60 text-sm font-bold">Fermer</Text>
         </Pressable>
       </Animated.View>
     </View>

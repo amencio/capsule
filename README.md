@@ -38,7 +38,7 @@ npx expo lint        # ESLint
 
 ## Concept
 
-L'UI de jeu se concentre sur un seul écran — le **Cockpit** — soutenu par 3 modales d'action + 1 modale alerte. Pas de scroll, pas de navigation entre écrans pour les actions de jeu.
+L'UI de jeu se concentre sur un seul écran — le **Cockpit** — avec une carte de statut utilisateur, une carte de trajectoire parabolique (Terre → ISS), et 3 modales d'action + 2 modales alerte (queue de priorité).
 
 ### Cycle de vie d'une capsule
 
@@ -68,17 +68,17 @@ resolved (+altitude créditeur)
 ```
 src/
 ├── app/
-│   ├── _layout.tsx          # Root: QueryClient → Auth → HoustonToast → CapsuleProvider → AppContent (memo)
+│   ├── _layout.tsx          # Root: QueryClient → Auth → HoustonToast → CapsuleProvider → ModalQueueProvider → AppContent (memo)
 │   ├── login.tsx
 │   └── (tabs)/
 │       ├── _layout.tsx       # Tabs navigator
-│       ├── index.tsx         # Cockpit (Radar + CapsuleShip + TableauBord + 4 overlays)
-│       ├── activite.tsx      # Historique + filtres
-│       ├── amis.tsx          # Classement altitude
-│       └── profil.tsx        # Profil + stats
-├── components/               # 14 composants (modales, ship, radar, etc.)
-├── context/                  # CapsuleProvider, AuthProvider, HoustonToastContext
-├── constants/                # game.ts (durées), theme.ts (couleurs, labels)
+│       ├── index.tsx         # Cockpit (UserStatusCard + TrajectoryMap + TableauBord + modales)
+│       ├── activite.tsx      # Historique + toggle scope (Mes activités/Amis) + 5 filtres
+│       ├── amis.tsx          # Classement altitude (dark theme)
+│       └── profil.tsx        # Profil + stats (dark theme)
+├── components/               # TrajectoryMap, UserStatusCard, FuelGauge, CapsuleCard, modales, etc.
+├── context/                  # CapsuleProvider, AuthProvider, HoustonToastContext, ModalQueueContext
+├── constants/                # game.ts (durées), theme.ts (couleurs, ACTION_COLORS, ROLE_COLORS)
 ├── data/mocks.ts             # 3 users, 13 capsules
 ├── hooks/                    # useAuth, useCapsules, useProfiles
 ├── services/                 # capsules.ts, profiles.ts (Supabase RPC)
@@ -88,10 +88,12 @@ src/
 
 ## Conventions
 
+- **Dark theme** partout : fonds `space.*` (`#0D0D11`, `#1a1a24`, `#22222E`), accents `neon.*`
+- **Système de couleurs unifié** : `ACTION_COLORS` + `ROLE_COLORS` dans `theme.ts` — une couleur par concept
 - **Pas de `<Modal>` RN** — overlays `<View>` absolus + animation Reanimated (bug NativeWind v4 sur Fabric)
 - **Pas de `react-native-gesture-handler`** — `PanResponder` natif pour swipe-to-confirm
-- **Styles `active:` toujours présents** dans le className de base, jamais ajoutés dynamiquement (bug NativeWind v4 `printUpgradeWarning`)
-- **`CapsuleProvider` au root** — au-dessus des navigators, `memo(AppContent)` bloque les re-renders cascade
+- **Modal Queue** : priorité launch > ravitaillement, `dismissedIds` pour dismiss permanent
+- **`CapsuleProvider` au root** — `memo(AppContent)` bloque les re-renders cascade
 - **Side effects hors `setState`** — calculer next state en dehors, appeler `setState(next)` directement
 - **Pas de commentaires** dans le code
 - **Commit style** : Conventional Commits anglais (`feat:`, `fix:`, `refactor:`, `docs:`)

@@ -65,7 +65,7 @@ export function UserStatusCard({ user, altitude, tankLevel, rank }: UserStatusCa
               <Text className="text-[#00FF66] text-[9px] font-bold tracking-wide">PRÊT</Text>
             </View>
           ) : (
-            <Text className="text-[#f97316] text-[9px] font-bold tracking-wide">RÉSERVOIR VIDE</Text>
+            <Text className="text-[#FF6B1A] text-[9px] font-bold tracking-wide">RÉSERVOIR VIDE</Text>
           )}
         </View>
       </View>

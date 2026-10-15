@@ -107,11 +107,11 @@ function RavitaillementAlertModalInner({
       >
         <Pressable style={StyleSheet.absoluteFill} onPress={handleDismissResolved}>
           <View className="flex-1 items-center justify-center">
-            <View className="bg-white border-2 border-black rounded-2xl px-8 py-6 items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <Text className="text-[#4ade80] text-3xl font-black">
+            <View className="bg-[#22222E] border-2 border-[#00FF66] rounded-2xl px-8 py-6 items-center">
+              <Text className="text-[#00FF66] text-3xl font-black">
                 Ravitaillement envoyé ✅
               </Text>
-              <Text className="text-black/50 text-sm mt-2 font-bold">
+              <Text className="text-white/50 text-sm mt-2 font-bold">
                 Touche pour fermer
               </Text>
             </View>
@@ -134,7 +134,7 @@ function RavitaillementAlertModalInner({
 
   return (
     <Animated.View
-      style={[StyleSheet.absoluteFill, { backgroundColor: "#1e3a5f" }, fadeStyle, { zIndex: 9999 }]}
+      style={[StyleSheet.absoluteFill, { backgroundColor: "#1A1A24" }, fadeStyle, { zIndex: 9999 }]}
     >
       <View className="flex-1 items-center justify-center px-6">
         <View className="relative z-10 items-center">
@@ -146,9 +146,9 @@ function RavitaillementAlertModalInner({
             DEMANDE DE RAVITAILLEMENT
           </Text>
 
-          <View className="bg-white border-2 border-black rounded-2xl px-5 py-4 mt-4 items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <View className="bg-[#22222E] border-2 border-[#2E2E3A] rounded-2xl px-5 py-4 mt-4 items-center">
             <View className="flex-row items-center gap-2.5 mb-2">
-              <View className="w-10 h-10 rounded-full border-2 border-black overflow-hidden items-center justify-center bg-white">
+              <View className="w-10 h-10 rounded-full border-2 border-[#2E2E3A] overflow-hidden items-center justify-center bg-[#22222E]">
                 {creditor.avatar_url ? (
                   <Image
                     source={{ uri: creditor.avatar_url }}
@@ -156,27 +156,27 @@ function RavitaillementAlertModalInner({
                     contentFit="cover"
                   />
                 ) : (
-                  <Text className="text-black text-sm font-bold">
+                  <Text className="text-white text-sm font-bold">
                     {creditor.pseudo.charAt(0).toUpperCase()}
                   </Text>
                 )}
               </View>
-              <Text className="text-black text-lg font-bold">
+              <Text className="text-white text-lg font-bold">
                 {creditor.pseudo}
               </Text>
             </View>
 
-            <Text className="text-black text-sm font-bold text-center">
+            <Text className="text-white/70 text-sm font-bold text-center">
               demande du carburant pour
             </Text>
-            <Text className="text-black text-xl font-black mt-1">
+            <Text className="text-white text-xl font-black mt-1">
               {capsule.drink_type} {drinkEmoji}
             </Text>
-            <Text className="text-black/50 text-xs mt-2 italic text-center">
+            <Text className="text-white/50 text-xs mt-2 italic text-center">
               &ldquo;{capsule.reason}&rdquo;
             </Text>
             {timeRemaining ? (
-              <Text className="text-black/40 text-[10px] mt-2">
+              <Text className="text-white/40 text-[10px] mt-2">
                 ⏳ {timeRemaining}
               </Text>
             ) : null}
@@ -184,14 +184,14 @@ function RavitaillementAlertModalInner({
 
           {isResolving ? (
             <View className="mt-6">
-              <ActivityIndicator size="large" color="#fff" />
+              <ActivityIndicator size="large" color="#00FF66" />
               <Text className="text-white text-sm font-bold mt-2">
                 Ravitaillement en cours...
               </Text>
             </View>
           ) : creditorTankFull ? (
-            <View className="mt-6 bg-[#fbbf24]/20 border-2 border-[#fbbf24] rounded-xl px-4 py-3 items-center">
-              <Text className="text-[#fbbf24] text-sm font-bold text-center">
+            <View className="mt-6 bg-[#FFD60A]/20 border-2 border-[#FFD60A] rounded-xl px-4 py-3 items-center">
+              <Text className="text-[#FFD60A] text-sm font-bold text-center">
                 ⚠️ Réservoir de {creditorName} plein ({TANK_MAX_CAPACITY}/{TANK_MAX_CAPACITY})
               </Text>
             </View>
@@ -208,15 +208,15 @@ function RavitaillementAlertModalInner({
             <View className="flex-row gap-4 mt-5">
               <Pressable
                 onPress={() => onRefuse(capsule.id)}
-                className="rounded-xl border-2 border-white/40 bg-white/10 px-5 py-2.5"
+                className="rounded-xl border-2 border-[#FF3B30] bg-[#FF3B30]/15 px-5 py-2.5"
               >
-                <Text className="text-white/80 text-sm font-bold">Refuser</Text>
+                <Text className="text-[#FF3B30] text-sm font-bold">Refuser</Text>
               </Pressable>
               <Pressable
                 onPress={onDismiss}
-                className="rounded-xl border-2 border-white/40 bg-white/10 px-5 py-2.5"
+                className="rounded-xl border-2 border-[#2E2E3A] bg-[#22222E] px-5 py-2.5"
               >
-                <Text className="text-white/80 text-sm font-bold">Plus tard</Text>
+                <Text className="text-white/60 text-sm font-bold">Plus tard</Text>
               </Pressable>
             </View>
           )}

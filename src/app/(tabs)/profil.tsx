@@ -35,7 +35,7 @@ export default function ProfilScreen() {
       : "Équilibre gravitationnel ⚖️";
 
   const karmaColor =
-    karma > 0 ? "#4ade80" : karma < 0 ? "#f87171" : "#06b6d4";
+    karma > 0 ? "#00FF66" : karma < 0 ? "#FF3B30" : "#00F0FF";
 
   async function handleSignOut() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -51,7 +51,7 @@ export default function ProfilScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="items-center mb-8">
-          <View className="w-24 h-24 rounded-full items-center justify-center border-2 border-black overflow-hidden bg-[#f8f9fa] mb-4 shadow-[4px_6px_0px_0px_rgba(0,0,0,1)]">
+          <View className="w-24 h-24 rounded-full items-center justify-center border-2 border-[#2E2E3A] overflow-hidden bg-[#22222E] mb-4">
             {profile.avatar_url ? (
               <Image
                 source={{ uri: profile.avatar_url }}
@@ -59,7 +59,7 @@ export default function ProfilScreen() {
                 contentFit="cover"
               />
             ) : (
-              <Text className="text-black text-3xl font-bold">
+              <Text className="text-white text-3xl font-bold">
                 {profile.pseudo.charAt(0).toUpperCase()}
               </Text>
             )}
@@ -79,7 +79,7 @@ export default function ProfilScreen() {
 
           {nextRank && (
             <View className="mt-2 items-center w-48">
-              <View className="w-full h-3 bg-[#f8f9fa] rounded-full overflow-hidden border-2 border-black">
+              <View className="w-full h-3 bg-[#22222E] rounded-full overflow-hidden border-2 border-[#2E2E3A]">
                 <View
                   style={{
                     width: `${progress}%`,
@@ -97,40 +97,39 @@ export default function ProfilScreen() {
         </View>
 
         <View className="flex-row gap-3 mb-4">
-          <View className="flex-1 bg-[#f8f9fa] border-2 border-black rounded-xl p-4 items-center shadow-[2px_4px_0px_0px_rgba(0,0,0,1)]">
+          <View className="flex-1 bg-[#22222E] border-2 border-[#2E2E3A] rounded-xl p-4 items-center">
             <Text
               style={{ color: rank.color }}
               className="text-3xl font-bold"
             >
               {altitude}
             </Text>
-            <Text className="text-black/50 text-xs mt-1">Altitude</Text>
+            <Text className="text-white/50 text-xs mt-1">Altitude</Text>
           </View>
-          <View className="flex-1 bg-[#f8f9fa] border-2 border-black rounded-xl p-4 items-center shadow-[2px_4px_0px_0px_rgba(0,0,0,1)]">
-            <Text className="text-[#4ade80] text-3xl font-bold">
+          <View className="flex-1 bg-[#22222E] border-2 border-[#2E2E3A] rounded-xl p-4 items-center">
+            <Text className="text-[#00FF66] text-3xl font-bold">
               {tankLevel}
             </Text>
-            <Text className="text-black/50 text-xs mt-1">⛽ Carburant</Text>
+            <Text className="text-white/50 text-xs mt-1">⛽ Carburant</Text>
           </View>
-          <View className="flex-1 bg-[#f8f9fa] border-2 border-black rounded-xl p-4 items-center shadow-[2px_4px_0px_0px_rgba(0,0,0,1)]">
-            <Text className="text-[#4ade80] text-3xl font-bold">
+          <View className="flex-1 bg-[#22222E] border-2 border-[#2E2E3A] rounded-xl p-4 items-center">
+            <Text className="text-[#00FF66] text-3xl font-bold">
               {totalCapsules}
             </Text>
-            <Text className="text-black/50 text-xs mt-1">Capsules</Text>
+            <Text className="text-white/50 text-xs mt-1">Capsules</Text>
           </View>
         </View>
 
         <View
-          className="rounded-xl p-4 mb-4 border-2 border-black shadow-[2px_4px_0px_0px_rgba(0,0,0,1)]"
-          style={{ backgroundColor: "#f8f9fa" }}
+          className="rounded-xl p-4 mb-4 border-2 border-[#2E2E3A] bg-[#22222E]"
         >
-          <Text className="text-black/40 text-xs font-bold tracking-widest uppercase mb-2">
+          <Text className="text-white/40 text-xs font-bold tracking-widest uppercase mb-2">
             Balance gravitationnelle
           </Text>
           <Text style={{ color: karmaColor }} className="text-lg font-bold">
             {karmaLabel}
           </Text>
-          <Text className="text-black/40 text-xs mt-1">
+          <Text className="text-white/40 text-xs mt-1">
             {karma > 0
               ? "Tu es porté — les autres te doivent plus de carburant que tu n'en dois."
               : karma < 0
@@ -139,34 +138,34 @@ export default function ProfilScreen() {
           </Text>
         </View>
 
-        <View className="bg-[#f8f9fa] border-2 border-black rounded-xl p-4 mb-4 shadow-[2px_4px_0px_0px_rgba(0,0,0,1)]">
-          <Text className="text-black/40 text-xs font-bold tracking-widest uppercase mb-3">
+        <View className="bg-[#22222E] border-2 border-[#2E2E3A] rounded-xl p-4 mb-4">
+          <Text className="text-white/40 text-xs font-bold tracking-widest uppercase mb-3">
             Paramètres
           </Text>
 
-          <View className="flex-row items-center justify-between py-3 border-b border-black/10">
-            <Text className="text-black/70 text-sm">Pseudo</Text>
-            <Text className="text-black text-sm font-semibold">{profile.pseudo}</Text>
+          <View className="flex-row items-center justify-between py-3 border-b border-[#2E2E3A]">
+            <Text className="text-white/70 text-sm">Pseudo</Text>
+            <Text className="text-white text-sm font-semibold">{profile.pseudo}</Text>
           </View>
 
-          <View className="flex-row items-center justify-between py-3 border-b border-black/10">
-            <Text className="text-black/70 text-sm">Avatar</Text>
-            <Text className="text-black/50 text-xs">
+          <View className="flex-row items-center justify-between py-3 border-b border-[#2E2E3A]">
+            <Text className="text-white/70 text-sm">Avatar</Text>
+            <Text className="text-white/50 text-xs">
               {profile.avatar_url ? "Configuré" : "Par défaut"}
             </Text>
           </View>
 
           <View className="flex-row items-center justify-between py-3">
-            <Text className="text-black/70 text-sm">Solde global</Text>
-            <Text className="text-black text-sm font-semibold">{profile.solde_global}</Text>
+            <Text className="text-white/70 text-sm">Solde global</Text>
+            <Text className="text-white text-sm font-semibold">{profile.solde_global}</Text>
           </View>
         </View>
 
         <Pressable
           onPress={handleSignOut}
-          className="bg-[#f87171] border-2 border-black rounded-xl py-4 items-center shadow-[2px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
+          className="bg-[#FF3B30]/15 border-2 border-[#FF3B30] rounded-xl py-4 items-center active:opacity-70"
         >
-          <Text className="text-black text-sm font-bold">
+          <Text className="text-[#FF3B30] text-sm font-bold">
             Déconnexion
           </Text>
         </Pressable>

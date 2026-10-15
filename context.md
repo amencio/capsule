@@ -62,46 +62,44 @@ Capsule = app mobile suivi dettes sociales de bar, RPG spatial entre amis. Chaqu
 
 ---
 
-## Architecture Actuelle — Pivot Cockpit (octobre 2026)
+## Architecture Actuelle — Dashboard Redesign + Modal Queue (octobre 2026)
 
 ### Écran principal : Le Cockpit (`src/app/(tabs)/index.tsx`)
 
-Écran fixe **sans scroll**. Structure :
+Écran avec scroll vertical. Structure :
 
 ```
 SafeAreaView (flex-1)
 ├── SpaceBackground (absolute)
-├── Header (w-full, flex-row justify-between)
-│   ├── CapsuleLogo + "CAPSULE"
-│   └── ProfileSwitcher ("Vue de : [Prénom] 🧑‍🚀")
-├── Body (flex-1 flex-row)
-│   ├── Radar (w-1/3) — gauche
-│   └── CapsuleShip (w-2/3) — droite
-├── TableauBord (w-full, 3 boutons)
-│   ├── GAUCHE (vert #4ade80) : "DEMANDER DU CARBURANT" → Modale 1
-│   ├── CENTRE (rouge/orange #f97316, le plus gros) : "ALLUMAGE MOTEURS" → Modale 2
-│   └── DROITE (bleu-nuit #1e3a5f) : "RAVITAILLER LES AMIS" → Modale 3 + badge rouge
-├── LaunchAlertModal (modale rouge plein écran, auto si launch_requested entrant)
-├── DemanderModal (visible state)
-├── AllumageModal (visible state)
-└── RavitaillementModal (visible state)
+├── ScrollView (flex-1)
+│   ├── Header (CapsuleLogo + "CAPSULE" + ProfileSwitcher)
+│   ├── UserStatusCard (compact: avatar + rank + FuelGauge)
+│   ├── TrajectoryMap (parabolic curve: Earth → ISS, avatars positionnés)
+│   ├── TableauBord (3 boutons: Demander / Allumage / Ravitailer + badge)
+│   └── Modales (DemanderModal, AllumageModal, RavitaillementModal)
+├── ModalQueueProvider (wrap AppContent)
+│   ├── LaunchAlertModal (priority 0, zIndex 9999)
+│   └── RavitaillementAlertModal (priority 1, zIndex 9998)
 ```
 
 ### 3 Modales d'Action (useState de visibilité, pas de navigation)
 
-| Modale | Titre exact | Bouton | Fichier | Action |
+| Modale | Titre exact | Couleur | Fichier | Action |
 |---|---|---|---|---|
-| 1 | DEMANDER DU CARBURANT | Vert | `DemanderModal.tsx` | Crée capsule `pending` avec `expires_at = now + 24h` |
-| 2 | ALLUMAGE MOTEURS | Rouge central | `AllumageModal.tsx` | Sélection carburant `active` → `launch_requested` + countdown forçage |
-| 3 | RAVITAILLER LES AMIS | Bleu + badge | `RavitaillementModal.tsx` | Liste demandes `pending` reçues → FOURNIR (→`active`) ou REFUSER (→`rejected`) |
-| Alert | (plein écran rouge) | Auto | `LaunchAlertModal.tsx` | Modale rouge plein écran si `launch_requested` où user est débiteur. Swipe-to-confirm → `resolved` |
+| 1 | DEMANDER DU CARBURANT | Vert `#00FF66` | `DemanderModal.tsx` | Crée capsule `pending` avec `expires_at = now + 24h` |
+| 2 | ALLUMAGE MOTEURS | Orange `#FF6B1A` | `AllumageModal.tsx` | Sélection carburant `active` → `launch_requested` + countdown forçage |
+| 3 | RAVITAILLER LES AMIS | Dark `#1A1A24` | `RavitaillementModal.tsx` | Liste demandes `pending` reçues → FOURNIR (→`active`) ou REFUSER (→`rejected`) |
+| Alert Launch | ALLUMAGE DEMANDÉ | Orange `#FF6B1A` | `LaunchAlertModal.tsx` | Overlay plein écran si `launch_requested` où user est débiteur. Swipe-to-confirm → `resolved` |
+| Alert Ravit | DEMANDE DE RAVITAILLEMENT | Dark `#1A1A24` | `RavitaillementAlertModal.tsx` | Overlay plein écran si `pending` reçu. Swipe-to-confirm → `active` |
 
-### Modale Alerte Allumage + Swipe
+### Modal Queue System (`src/context/ModalQueueContext.tsx`)
 
-- `LaunchAlertModal.tsx` : modale rouge plein écran qui s'ouvre **automatiquement** quand l'utilisateur courant a des capsules `launch_requested` où il est débiteur.
-- `SwipeToConfirm.tsx` : widget slide-to-unlock (knob rouge 🔥 glisse gauche→droite). Utilise `PanResponder` natif RN (pas `react-native-gesture-handler`).
-- **IMPORTANT** : Pas de `GestureHandlerRootView` dans l'app. `SwipeToConfirm` utilise `PanResponder` (RN natif). Les modales utilisent des overlays `<View>` absolus (pas `<Modal>` RN) — voir section Bug History.
-- Après swipe validé → `justResolved = true` → overlay gris `bg-black/40` "Validé ✅ / Touche pour fermer" → tap → fermeture.
+File de priorité pour les modales alerte :
+- **Priority 0** : `LaunchAlertModal` (launch_requested entrant) — zIndex 9999, timer auto
+- **Priority 1** : `RavitaillementAlertModal` (pending reçu) — zIndex 9998, deferrable
+- `"Plus tard"` = dismiss permanent de la queue (accessible via bouton manuel + badge)
+- `AllumageModal` peut être interrompu par une alerte (l'alerte s'affiche par-dessus)
+- `dismissedIds` : Set d'IDs dismissés, empêche le ré-affichage auto
 
 ---
 
@@ -125,9 +123,10 @@ SafeAreaView (flex-1)
 
 ### Règles de Score
 
-- **Altitude** = Σ(`amount` où `creditor_id = userId` ET `status = 'resolved'`). Cumulatif, jamais négatif. 0 = Terre.
-- **Réservoir (Tank)** = Σ(`amount` où `creditor_id = userId` ET `status = 'active'`). Plafonné à `TANK_MAX_CAPACITY = 5`.
-- **Carburant en combustion** = Σ(`amount` où `creditor_id = userId` ET `status = 'launch_requested'`).
+- **Altitude** = Σ(capsules où `creditor_id = userId` ET `status = 'resolved'`). Cumulatif, jamais négatif. 0 = Terre.
+- **Réservoir (Tank)** = Σ(capsules où `creditor_id = userId` ET `status = 'active'`). Plafonné à `TANK_MAX_CAPACITY = 5`.
+- **Carburant en combustion** = Σ(capsules où `creditor_id = userId` ET `status = 'launch_requested'`).
+- `amount` hardcoded à 1 partout (plus de sélecteur de quantité — champ conservé en DB/types pour compat).
 - Seule la consommation réelle (passage en `resolved`) fait monter sur le leaderboard.
 
 ### Constantes Centralisées (`src/constants/game.ts`)
@@ -226,29 +225,54 @@ L'app tourne sur mock data persistée via AsyncStorage :
 
 | Composant | Fichier | Description |
 |---|---|---|
-| `SpaceBackground` | `SpaceBackground.tsx` | Dégradé `#1a233a→#0d111a` + étoiles SVG + Terre |
+| `SpaceBackground` | `SpaceBackground.tsx` | Dégradé `#1a233a→#0d111a` + étoiles SVG (Terre retirée, gérée par TrajectoryMap) |
 | `CapsuleLogo` | `CapsuleLogo.tsx` | Logo hybride capsule/vaisseau SVG |
-| `Radar` | `Radar.tsx` | Évolution GravJauge : ligne pointillée Terre→ISS, cosmonautes SVG avec photos, badges score, w-1/3 |
-| `CapsuleShip` | `CapsuleShip.tsx` | Vaisseau cartoon BD + visière avatar + réservoir 5 sections + voyants "PRÊT" |
-| `TableauBord` | `TableauBord.tsx` | 3 boutons (vert/rouge/bleu) + badge rouge + icônes Lucide (Fuel, Flame, Satellite) |
-| `SwipeToConfirm` | `SwipeToConfirm.tsx` | Widget slide-to-unlock : knob rouge 🔥, track gris, remplissage vert, spring back. Utilise `PanResponder` (RN natif). |
-| `LaunchAlertModal` | `LaunchAlertModal.tsx` | Overlay rouge plein écran + SwipeToConfirm + overlay "Validé ✅". Split outer/inner pour isoler hooks Reanimated. |
-| `DemanderModal` | `DemanderModal.tsx` | Modale 1 (vert) : ami + boisson + quantité + motif + `expires_at` |
-| `AllumageModal` | `AllumageModal.tsx` | Modale 2 (rouge) : liste carburant `active` + `launch_requested` + countdown forçage + confirmation |
-| `RavitaillementModal` | `RavitaillementModal.tsx` | Modale 3 (bleu) : demandes `pending` reçues + FOURNIR/REFUSER + timer expiration + blocage 5/5 |
-| `CapsuleCard` | `CapsuleCard.tsx` | Cartes historique (Activité) avec tous statuts + marqueur `validated`/`forced` |
+| `TrajectoryMap` | `TrajectoryMap.tsx` | Carte trajectoire parabolique (courbe bézier quadratique). Earth + ISS SVG, avatars positionnés sur courbe, dots rangs. Clustering vertical anti-chevauchement. |
+| `UserStatusCard` | `UserStatusCard.tsx` | Carte compacte : avatar + pseudo + rank + FuelGauge + statut carburant |
+| `FuelGauge` | `FuelGauge.tsx` | Jauge carburant horizontale 5 segments (flex-1 min-w-0, pas de minWidth) |
+| `TableauBord` | `TableauBord.tsx` | 3 boutons (vert/orange/dark) + badge + icônes Lucide |
+| `SwipeToConfirm` | `SwipeToConfirm.tsx` | Widget slide-to-unlock. `PanResponder` natif RN. |
+| `LaunchAlertModal` | `LaunchAlertModal.tsx` | Overlay orange `#FF6B1A` plein écran + SwipeToConfirm + overlay "Validé ✅". Split outer/inner. |
+| `RavitaillementAlertModal` | `RavitaillementAlertModal.tsx` | Overlay dark `#1A1A24` plein écran + SwipeToConfirm + boutons Refuser/Plus tard. Queue-aware. |
+| `DemanderModal` | `DemanderModal.tsx` | Modale 1 (vert) : ami + boisson + motif. Dark theme. |
+| `AllumageModal` | `AllumageModal.tsx` | Modale 2 (orange) : liste carburant `active` + `launch_requested` + countdown forçage. Dark theme. |
+| `RavitaillementModal` | `RavitaillementModal.tsx` | Modale 3 (dark) : demandes `pending` reçues + FOURNIR/REFUSER + timer. Dark theme. |
+| `CapsuleCard` | `CapsuleCard.tsx` | Carte activité (dark theme). 3 modes : creditor, debtor, observer (double avatar). Badges colorés, phrases contextuelles, boutons si impliqué. |
 | `ProfileSwitcher` | `ProfileSwitcher.tsx` | Dropdown dev-only "Vue de : [User]" |
 | `ErrorBoundary` | `ErrorBoundary.tsx` | Error boundary global |
-| `FuelGauge` | `FuelGauge.tsx` | Jauge carburant standalone (utilisé dans profil.tsx, max=5) |
 
-### Design System Cartoon
+### Système de Couleurs Unifié (`src/constants/theme.ts`)
 
-- **Bordures** : `border-2 border-black` sur tout élément interactif
-- **Hard shadows** : `shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]` (no blur)
-- **Arrondis** : `rounded-xl` ou `rounded-2xl`
-- **Bouton press** : `active:translate-y-0.5` + shadow réduit
-- **Cartes** : fond blanc `#f8f9fa`, texte noir
-- **Icônes** : Lucide (Fuel, Flame, Satellite) — pas d'icône ambiguë
+**Palettes :** `COLORS.space.*` (fonds dark), `COLORS.neon.*` (actions), `COLORS.earth.*` (décor).
+
+**`ACTION_COLORS`** — une couleur par concept, utilisé partout (badges, boutons, textes) :
+
+| Concept | Couleur | Hex |
+|---|---|---|
+| Ravitaillement / Carburant | Vert neon | `#00FF66` |
+| Mise à feu / Allumage | Orange neon | `#FF6B1A` |
+| Refus / Destructif | Rouge neon | `#FF3B30` |
+| En attente / Timer | Jaune neon | `#FFD60A` |
+| Résolu / Décollé | Cyan neon | `#00F0FF` |
+| Expiré | Gris | `#9ca3af` |
+
+**`ROLE_COLORS`** :
+
+| Rôle | Couleur | Hex |
+|---|---|---|
+| Current user | Cyan | `#00F0FF` |
+| Creditor | Vert | `#00FF66` |
+| Debtor | Orange | `#FF6B1A` |
+
+**Règle :** Plus de couleurs `cartoon.*` (ancien thème clair). Tout est `neon.*` sur fond `space.*`.
+
+### Design System Dark
+
+- **Fonds** : `#0D0D11` (deep), `#1a1a24` (surface), `#22222E` (card), `#2E2E3A` (border)
+- **Bordures** : `border-2 border-[#2E2E3A]` (ou `border` pour subtil)
+- **Boutons** : bordure couleur neon + fond translucide (`bg-[#color]/15`), texte couleur neon. Boutons primaires : fond plein.
+- **Cartes** : fond `#1a1a24`, texte `text-white`, sous-texte `text-white/40`
+- **Hard shadows** : retirés (invisibles sur dark)
 
 ---
 
@@ -265,10 +289,10 @@ L'app tourne sur mock data persistée via AsyncStorage :
         ├── _layout.tsx       → Tabs (Dashboard, Activité, Amis, Profil) — mémoïsé via memo()
         │                       CapsuleProvider wrapper (pas de realtime hooks en mode mock)
     │
-    ├── index.tsx         → Cockpit (Radar 1/3 + CapsuleShip 2/3 + TableauBord + 4 modales)
-    ├── activite.tsx      → Historique complet + filtres (7 statuts)
-    ├── amis.tsx          → Classement par altitude
-    └── profil.tsx        → Avatar, stats (altitude, tankLevel, capsules), déconnexion
+    ├── index.tsx         → Cockpit (UserStatusCard + TrajectoryMap + TableauBord + modales)
+    ├── activite.tsx      → Historique + toggle scope (Mes activités/Amis) + 5 filtres (Ravitaillement, Carburant, Mise à feu, Terminées)
+    ├── amis.tsx          → Classement par altitude (dark theme)
+    └── profil.tsx        → Avatar, stats (altitude, tankLevel, capsules), karma, déconnexion (dark theme)
 ```
 
 ---
@@ -295,25 +319,25 @@ L'app tourne sur mock data persistée via AsyncStorage :
 │   │   └── login.tsx
     │   ├── components/
     │   │   ├── CapsuleLogo.tsx
-    │   │   ├── CapsuleShip.tsx              # Vaisseau BD + réservoir 5 sections + voyants
-    │   │   ├── CapsuleCard.tsx              # Carte historique (tous statuts + validated/forced)
-    │   │   ├── DemanderModal.tsx            # Modale 1 : DEMANDER DU CARBURANT (overlay animé)
-    │   │   ├── AllumageModal.tsx            # Modale 2 : ALLUMAGE MOTEURS (overlay animé + countdown)
-    │   │   ├── RavitaillementModal.tsx      # Modale 3 : RAVITAILLER LES AMIS (overlay animé)
-    │   │   ├── LaunchAlertModal.tsx         # Overlay rouge plein écran + SwipeToConfirm + overlay Validé (split outer/inner)
+    │   │   ├── TrajectoryMap.tsx             # Courbe parabolique Earth→ISS, avatars, clustering anti-chevauchement
+    │   │   ├── UserStatusCard.tsx            # Carte compacte user (avatar + rank + FuelGauge)
+    │   │   ├── FuelGauge.tsx                 # Jauge 5 segments horizontale (flex-1 min-w-0)
+    │   │   ├── CapsuleCard.tsx              # Carte activité (3 modes: creditor/debtor/observer, dark theme)
+    │   │   ├── DemanderModal.tsx            # Modale 1 : DEMANDER DU CARBURANT (dark theme)
+    │   │   ├── AllumageModal.tsx            # Modale 2 : ALLUMAGE MOTEURS (dark theme + countdown)
+    │   │   ├── RavitaillementModal.tsx      # Modale 3 : RAVITAILLER LES AMIS (dark theme)
+    │   │   ├── RavitaillementAlertModal.tsx # Alert overlay : DEMANDE DE RAVITAILLEMENT (swipe-to-confirm, queue-aware)
+    │   │   ├── LaunchAlertModal.tsx         # Alert overlay : ALLUMAGE DEMANDÉ (swipe-to-confirm, split outer/inner)
     │   │   ├── SwipeToConfirm.tsx           # Widget slide-to-unlock (PanResponder natif RN)
-    │   │   ├── TableauBord.tsx              # 3 boutons (vert/rouge/bleu) + badge
-    │   │   ├── Radar.tsx                    # Terre→ISS, cosmonautes, w-1/3
+    │   │   ├── TableauBord.tsx              # 3 boutons (vert/orange/dark) + badge
     │   │   ├── ProfileSwitcher.tsx
-    │   │   ├── SpaceBackground.tsx
+    │   │   ├── SpaceBackground.tsx          # Dégradé + étoiles (Terre retirée)
     │   │   └── ErrorBoundary.tsx
-│   ├── constants/
-│   │   ├── theme.ts                     # Couleurs + STATUS_LABELS (6 statuts) + STATUS_COLORS + DRINK_TYPES
-│   │   └── game.ts                     # TANK_MAX_CAPACITY=5, PENDING_EXPIRY_HOURS=24, FORCE_IGNITION_DELAY_MINUTES=3, LAUNCH_TIMEOUT_HOURS=1
-│   ├── context/
-│   │   ├── AuthProvider.tsx
-│   │   ├── CapsuleProvider.tsx          # Mock store + AsyncStorage persistence + handlers + expiry/timeout checks
-│   │   └── HoustonToastContext.tsx
+    │   ├── context/
+    │   │   ├── AuthProvider.tsx
+    │   │   ├── CapsuleProvider.tsx          # Mock store + AsyncStorage + handlers + allUserCapsules + allFriendsCapsules
+    │   │   ├── ModalQueueContext.tsx        # File priorité alertes (launch > ravitaillement, dismissedIds)
+    │   │   └── HoustonToastContext.tsx
 │   ├── data/
 │   │   └── mocks.ts                     # 3 users, 13 capsules (pending/active/launch_requested/resolved/rejected/expired)
     │   ├── hooks/
@@ -360,7 +384,7 @@ L'app tourne sur mock data persistée via AsyncStorage :
 - **Constantes de durée** centralisées dans `src/constants/game.ts` — jamais de valeurs en dur
 - **Mutations via TanStack Query** : `useMutation` + `onSuccess: invalidateQueries`
 - **Realtime** : hooks appelés une fois dans `(tabs)/_layout.tsx`. Channels uniques + `isMounted` ref
-- **Styling** : NativeWind `className="..."`, palette `space-*`, `neon-*`, `earth-*`. Cartoon : `border-2 border-black` + hard shadows
+- **Styling** : NativeWind `className="..."`, palette `space-*`, `neon-*`, `earth-*`. Dark theme partout. `ACTION_COLORS` et `ROLE_COLORS` pour cohérence des couleurs.
 - **SafeArea** : `SafeAreaView` `edges={["top"]}` sur écrans
 - **Reanimated** : `cancelAnimation()` dans cleanup `useEffect`
 - **Selected capsule pattern** : stocker l'ID dans le state, dériver l'objet capsule depuis les props/store (évite les snapshots stale)
@@ -466,7 +490,7 @@ Le bug le plus tenace du projet : crash `NavigationStateContext` ("Couldn't find
 ## Git & GitHub
 
 - **Repo GitHub** : privé, `capsule`
-- **Branche active** : `feat/cockpit-pivot-3-modales`
+- **Branche active** : `feat/activite-redesign`
 - **Auth** : GitHub CLI (`gh auth login`) ou PAT (scope `repo`)
 - **Supabase credentials** : `anon key` dans `app.json` = clé publique (RLS protège), safe à commiter
 - **Commit style** : Conventional Commits anglais (`feat:`, `fix:`, `refactor:`, `docs:`)
@@ -476,13 +500,14 @@ Le bug le plus tenace du projet : crash `NavigationStateContext` ("Couldn't find
 ## État Actuel (octobre 2026)
 
 - **App fonctionnelle** avec mock data persistée via AsyncStorage.
-- **Cockpit pivot terminé** : 1 écran principal (Radar + CapsuleShip + TableauBord) + 3 overlays animés + 1 overlay alerte.
+- **Dashboard redesigné** : UserStatusCard + TrajectoryMap (courbe parabolique) + TableauBord. Layout vertical.
+- **Modal Queue** : file de priorité pour alertes (launch > ravitaillement). `ModalQueueContext` wrapper dans `_layout.tsx`.
+- **Onglet Activité refondu** : dark theme, toggle scope (Mes activités / Amis), 5 filtres (Ravitaillement, Carburant, Mise à feu, Terminées). CapsuleCard 3 modes (creditor/debtor/observer avec double avatar).
+- **Système de couleurs unifié** : `ACTION_COLORS` + `ROLE_COLORS` dans `theme.ts`. Palette neon sur fond space. Plus de couleurs cartoon.
+- **Quantité retirée** : `amount` hardcoded à 1, plus de sélecteur UI.
 - **6 statuts de capsule** : `pending`, `active`, `launch_requested`, `resolved`, `rejected`, `expired`.
 - **Système de temps complet** : expiration 24h, forçage 3 min, retombée 1h.
-- **Swipe-to-confirm** fonctionnel dans LaunchAlertModal (PanResponder natif, pas de gesture-handler).
-- **Modales** : overlays `<View>` absolus + animation Reanimated (slide up / fade in). Pas de `<Modal>` RN (incompatible Fabric).
-- **DB Supabase migrée** : migration 0005 exécutée (nouvelles colonnes + RPCs).
-- **Hooks + services prêts** mais **pas encore branchés** aux écrans (mocks). Realtime hooks retirés du layout (mock mode).
-- **ProfileSwitcher** : dev-only, sera supprimé au wire Supabase.
+- **Swipe-to-confirm** fonctionnel (PanResponder natif).
+- **Modales** : overlays `<View>` absolus + animation Reanimated. Pas de `<Modal>` RN.
+- **DB Supabase migrée** mais hooks/services pas encore branchés (mocks).
 - **Lint + typecheck** : 0 erreur, 0 warning.
-- **Bug NavigationStateContext** : fix en cours de test (`memo(TabsContent)` + refactor CapsuleProvider). Voir Bug History.

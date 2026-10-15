@@ -62,17 +62,17 @@ export default function AmisScreen() {
                   Haptics.selectionAsync();
                   setSelectedUserId(isSelected ? null : user.id);
                 }}
-                className={`flex-row items-center gap-3 rounded-xl px-4 py-3 mb-2 border-2 border-black ${
+                className={`flex-row items-center gap-3 rounded-xl px-4 py-3 mb-2 border-2 border-[#2E2E3A] ${
                   isSelected
-                    ? "bg-[#06b6d4]/10"
-                    : "bg-[#f8f9fa] shadow-[2px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5"
+                    ? "bg-[#00F0FF]/10"
+                    : "bg-[#22222E]"
                 }`}
               >
-                <Text className="text-black/40 text-sm font-bold w-8">
+                <Text className="text-white/40 text-sm font-bold w-8">
                   {medal}
                 </Text>
 
-                <View className="w-10 h-10 rounded-full items-center justify-center border-2 border-black overflow-hidden bg-white">
+                <View className="w-10 h-10 rounded-full items-center justify-center border-2 border-[#2E2E3A] overflow-hidden bg-[#22222E]">
                   {user.avatar_url ? (
                     <Image
                       source={{ uri: user.avatar_url }}
@@ -80,7 +80,7 @@ export default function AmisScreen() {
                       contentFit="cover"
                     />
                   ) : (
-                    <Text className="text-black text-sm font-bold">
+                    <Text className="text-white text-sm font-bold">
                       {user.pseudo.charAt(0).toUpperCase()}
                     </Text>
                   )}
@@ -89,7 +89,7 @@ export default function AmisScreen() {
                 <View className="flex-1">
                   <Text
                     className={`text-sm font-bold ${
-                      isCurrentUser ? "text-[#06b6d4]" : "text-black"
+                      isCurrentUser ? "text-[#00F0FF]" : "text-white"
                     }`}
                   >
                     {user.pseudo} {isCurrentUser && "(toi)"}
@@ -106,7 +106,7 @@ export default function AmisScreen() {
                   >
                     {altitude}
                   </Text>
-                  <Text className="text-black/30 text-[8px]">altitude</Text>
+                  <Text className="text-white/30 text-[8px]">altitude</Text>
                 </View>
               </Pressable>
             );
@@ -114,12 +114,12 @@ export default function AmisScreen() {
         </View>
 
         {selectedUser && (
-          <View className="bg-[#f8f9fa] border-2 border-black rounded-xl p-4 mb-4 shadow-[2px_4px_0px_0px_rgba(0,0,0,1)]">
-            <Text className="text-black/60 text-xs font-bold tracking-widest uppercase mb-3">
+          <View className="bg-[#22222E] border-2 border-[#2E2E3A] rounded-xl p-4 mb-4">
+            <Text className="text-white/60 text-xs font-bold tracking-widest uppercase mb-3">
               Capsules avec {selectedUser.pseudo}
             </Text>
             {capsulesWithSelected.length === 0 ? (
-              <Text className="text-black/30 text-sm">Aucune capsule en commun</Text>
+              <Text className="text-white/30 text-sm">Aucune capsule en commun</Text>
             ) : (
               capsulesWithSelected.map((c) => {
                 const isCreditor = c.creditor_id === currentUserId;
@@ -127,17 +127,17 @@ export default function AmisScreen() {
                   ? `→ ${selectedUser.pseudo} doit te ravitailler en ${c.drink_type}`
                   : `← ${selectedUser.pseudo} attend ton ravitaillement en ${c.drink_type}`;
                 return (
-                  <View key={c.id} className="mb-3 pb-3 border-b border-black/10 last:border-b-0">
-                    <Text className="text-black/60 text-[10px] mb-1">{direction}</Text>
+                  <View key={c.id} className="mb-3 pb-3 border-b border-[#2E2E3A] last:border-b-0">
+                    <Text className="text-white/60 text-[10px] mb-1">{direction}</Text>
                     <View className="flex-row items-center gap-2">
-                      <View className="bg-[#4ade80]/10 border border-[#4ade80]/30 rounded px-2 py-0.5">
-                        <Text className="text-[#4ade80] text-[10px] font-bold">
+                      <View className="bg-[#00FF66]/10 border border-[#00FF66]/30 rounded px-2 py-0.5">
+                        <Text className="text-[#00FF66] text-[10px] font-bold">
                           {c.drink_type}
                         </Text>
                       </View>
-                      <Text className="text-black/70 text-xs flex-1">{c.reason}</Text>
+                      <Text className="text-white/70 text-xs flex-1">{c.reason}</Text>
                     </View>
-                    <Text className="text-black/30 text-[10px] mt-1">
+                    <Text className="text-white/30 text-[10px] mt-1">
                       {STATUS_LABELS[c.status]}
                     </Text>
                   </View>

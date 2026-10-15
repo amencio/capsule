@@ -73,7 +73,7 @@ export function DemanderModal({
   if (!visible) return null;
 
   function handleLaunch() {
-    if (!canLaunch || !selectedId || creditorTankFull) return;
+    if (!canLaunch || creditorTankFull) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     onLaunch({
@@ -103,19 +103,19 @@ export function DemanderModal({
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           className="flex-1 justify-end"
         >
-          <View className="bg-[#f8f9fa] border-t-2 border-black rounded-t-3xl px-5 pt-3 pb-8">
-            <View className="w-12 h-1 bg-black/20 rounded-full self-center mb-4" />
+          <View className="bg-[#1a1a24] border-t-2 border-[#2E2E3A] rounded-t-3xl px-5 pt-3 pb-8">
+            <View className="w-12 h-1 bg-[#2E2E3A] rounded-full self-center mb-4" />
 
             <View className="flex-row items-center gap-2 mb-4">
-              <View className="w-8 h-8 rounded-full bg-[#4ade80] border-2 border-black items-center justify-center">
+              <View className="w-8 h-8 rounded-full bg-[#00FF66] border-2 border-[#2E2E3A] items-center justify-center">
                 <Text className="text-black text-sm font-bold">⛽</Text>
               </View>
-              <Text className="text-black text-lg font-bold">
+              <Text className="text-white text-lg font-bold">
                 DEMANDER DU CARBURANT
               </Text>
             </View>
 
-            <Text className="text-black/50 text-xs font-bold tracking-wide uppercase mb-2">
+            <Text className="text-white/50 text-xs font-bold tracking-wide uppercase mb-2">
               À qui demandes-tu du carburant ?
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
@@ -129,15 +129,15 @@ export function DemanderModal({
                         setSelectedId(friend.id);
                         Haptics.selectionAsync();
                       }}
-                      className={`px-4 py-2 rounded-full border-2 border-black ${
+                      className={`px-4 py-2 rounded-full border-2 border-[#2E2E3A] ${
                         selectedId === friend.id
-                          ? "bg-[#4ade80]"
-                          : "bg-white"
+                          ? "bg-[#00FF66]"
+                          : "bg-[#22222E]"
                       }`}
                     >
                       <Text
                         className={`text-sm font-bold ${
-                          selectedId === friend.id ? "text-black" : "text-black"
+                          selectedId === friend.id ? "text-black" : "text-white"
                         }`}
                       >
                         {friend.pseudo}
@@ -147,7 +147,7 @@ export function DemanderModal({
               </View>
             </ScrollView>
 
-            <Text className="text-black/50 text-xs font-bold tracking-wide uppercase mb-2">
+            <Text className="text-white/50 text-xs font-bold tracking-wide uppercase mb-2">
               Boisson
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
@@ -159,15 +159,15 @@ export function DemanderModal({
                       setDrinkType(drink);
                       setCustomDrink("");
                     }}
-                    className={`px-3 py-1.5 rounded-lg border-2 border-black ${
+                    className={`px-3 py-1.5 rounded-lg border-2 border-[#2E2E3A] ${
                       drinkType === drink && !customDrink
-                        ? "bg-[#4ade80]"
-                        : "bg-white"
+                        ? "bg-[#00FF66]"
+                        : "bg-[#22222E]"
                     }`}
                   >
                     <Text
                       className={`text-xs font-bold ${
-                        drinkType === drink && !customDrink ? "text-black" : "text-black/60"
+                        drinkType === drink && !customDrink ? "text-black" : "text-white/60"
                       }`}
                     >
                       {drink}
@@ -180,26 +180,26 @@ export function DemanderModal({
               value={customDrink}
               onChangeText={setCustomDrink}
               placeholder="Ou boisson personnalisée..."
-              placeholderTextColor="rgba(0,0,0,0.25)"
-              className="bg-white border-2 border-black rounded-xl px-4 py-2.5 text-black text-sm mb-4"
+              placeholderTextColor="rgba(255,255,255,0.25)"
+              className="bg-[#22222E] border-2 border-[#2E2E3A] rounded-xl px-4 py-2.5 text-white text-sm mb-4"
             />
 
-            <Text className="text-black/50 text-xs font-bold tracking-wide uppercase mb-2">
+            <Text className="text-white/50 text-xs font-bold tracking-wide uppercase mb-2">
               Motif
             </Text>
             <TextInput
               value={reason}
               onChangeText={setReason}
               placeholder="Ex: Pari Ligue 1 !"
-              placeholderTextColor="rgba(0,0,0,0.25)"
-              className="bg-white border-2 border-black rounded-xl px-4 py-3 text-black text-sm mb-4"
+              placeholderTextColor="rgba(255,255,255,0.25)"
+              className="bg-[#22222E] border-2 border-[#2E2E3A] rounded-xl px-4 py-3 text-white text-sm mb-4"
               multiline
               numberOfLines={2}
             />
 
             {creditorTankFull && (
-              <View className="bg-[#fbbf24]/20 border-2 border-[#fbbf24] rounded-xl px-4 py-2.5 mb-3">
-                <Text className="text-[#92400e] text-xs font-bold">
+              <View className="bg-[#FFD60A]/20 border-2 border-[#FFD60A] rounded-xl px-4 py-2.5 mb-3">
+                <Text className="text-[#FFD60A] text-xs font-bold">
                   ⚠️ Réservoir de {creditorName} plein ({TANK_MAX_CAPACITY}/{TANK_MAX_CAPACITY})
                 </Text>
               </View>
@@ -208,17 +208,17 @@ export function DemanderModal({
             <View className="flex-row gap-3">
               <Pressable
                 onPress={onClose}
-                className="flex-1 bg-white border-2 border-black rounded-xl py-3 items-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-0.5"
+                className="flex-1 bg-[#22222E] border-2 border-[#2E2E3A] rounded-xl py-3 items-center active:opacity-70"
               >
-                <Text className="text-black/60 text-sm font-bold">Annuler</Text>
+                <Text className="text-white/60 text-sm font-bold">Annuler</Text>
               </Pressable>
               <Pressable
                 onPress={handleLaunch}
                 disabled={!canLaunch || creditorTankFull}
-                className={`flex-[2] rounded-xl py-3 items-center border-2 border-black active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 ${
+                className={`flex-[2] rounded-xl py-3 items-center border-2 border-[#2E2E3A] active:opacity-70 ${
                   canLaunch && !creditorTankFull
-                    ? "bg-[#4ade80] shadow-[4px_6px_0px_0px_rgba(0,0,0,1)]"
-                    : "bg-[#4ade80]/20"
+                    ? "bg-[#00FF66]"
+                    : "bg-[#00FF66]/20"
                 }`}
               >
                 <Text
