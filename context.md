@@ -17,6 +17,8 @@ npm install --legacy-peer-deps
 #    - supabase/migrations/0001_init.sql
 #    - supabase/migrations/0002_rpc_tickets.sql
 #    - supabase/migrations/0003_refonte_capsules.sql
+#    - supabase/migrations/0004_double_validation.sql
+#    - supabase/migrations/0005_cockpit_pivot.sql
 
 # 4. Lancer l'app
 npx expo start
@@ -38,15 +40,16 @@ npx expo lint        # ESLint → 0 erreur attendue
 | `expo-router` | `~57.0.0` | Navigation file-based |
 | `nativewind` | `^4.2.7` | Tailwind CSS pour RN (v4, compatible Tailwind v3) |
 | `tailwindcss` | `^3.4.17` | Styling utility-first |
-| `react-native-reanimated` | `~4.5.1` | Animations 60fps (thread UI natif) |
+| `react-native-reanimated` | `^4.5.1` | Animations 60fps (thread UI natif) |
 | `react-native-worklets` | `0.10.1` | Dépendance Reanimated |
 | `@tanstack/react-query` | `^5.0.0` | Cache, mutations, stale-while-revalidate |
 | `@supabase/supabase-js` | `^2.109.0` | Client backend (auth, DB, realtime) |
 | `expo-haptics` | `~57.0.0` | Retours haptiques |
 | `expo-linear-gradient` | `~57.0.0` | Dégradés |
-| `expo-image` | `~3.0.0` | Avatars performants |
-| `lucide-react-native` | `^1.52.0` | Icônes tab bar |
-| `react-native-svg` | `^15.15.4` | SVG (cosmonautes, décor, logo) |
+| `expo-image` | `~57.0.5` | Avatars performants |
+| `lucide-react-native` | `^1.52.0` | Icônes (Fuel, Flame, Satellite, etc.) |
+| `react-native-svg` | `^15.15.4` | SVG (cosmonautes, décor, logo, vaisseau) |
+| `@react-native-async-storage/async-storage` | `~2.2.0` | Persistance mock state + session Supabase |
 | `typescript` | `~6.0.3` | Typage strict |
 
 **Pas de support web.** Mobile-only (Expo Go). `react-dom`, `react-native-web`, `@expo/metro-runtime` volontairement absents.
@@ -55,37 +58,145 @@ npx expo lint        # ESLint → 0 erreur attendue
 
 ## Vision et Concept
 
-Capsule = app mobile suivi dettes sociales de bar, RPG spatial entre amis. Chaque verre dû = "contrat social" unique avec histoire + validation bilatérale. Nom "Capsule" pont entre capsule bouteille et capsule spatiale (mise en "orbite").
+Capsule = app mobile suivi dettes sociales de bar, RPG spatial entre amis. Chaque verre dû = "capsule" (jeu de mot capsule bouteille / capsule spatiale). L'UI de jeu se concentre sur UN seul écran principal — le Cockpit — soutenu par 3 modales d'action. La navigation générale (nav bar) reste inchangée.
 
 ---
 
-## Identité Visuelle et Lexique
+## Architecture Actuelle — Dashboard Redesign + Modal Queue (octobre 2026)
 
-- **Style :** Cartoon/Bande Dessinée spatial. Bordures noires épaisses (`border-2 border-black`), hard shadows solides (no blur), arrondis prononcés. Fond dégradé `#1a233a → #0d111a`.
-- **Palette :** `#0D0D11` (fond), `#1A1A24` (surface), `#00FF66` (vert néon), `#FF3B30` (rouge), `#FFD60A` (jaune alerte), `#00F0FF` (cyan info), `#FF6B1A` (orange CTA), `#f97316` (orange cartoon), `#4ade80` (vert cartoon), `#f8f9fa` (blanc cartes). Définie dans `src/constants/theme.ts` et `tailwind.config.js`.
-- **Lexique :**
-  - *Demander un verre :* Lancer une capsule
-  - *Payer/Valider un verre :* Décapsuler (décollage)
-  - *La jauge d'état :* L'Orbite (OrbitTrack)
-  - *Score :* Altitude (Σ capsules resolved où creditor)
-  - *0 verre bu :* Gravité Zéro / Houston (sur Terre)
-  - *Capsules active :* Carburant (prêt à décapsuler)
+### Écran principal : Le Cockpit (`src/app/(tabs)/index.tsx`)
+
+Écran avec scroll vertical. Structure :
+
+```
+SafeAreaView (flex-1)
+├── SpaceBackground (absolute)
+├── ScrollView (flex-1)
+│   ├── Header (CapsuleLogo + "CAPSULE" + ProfileSwitcher)
+│   ├── UserStatusCard (compact: avatar + rank + FuelGauge)
+│   ├── TrajectoryMap (parabolic curve: Earth → ISS, avatars positionnés)
+│   ├── TableauBord (3 boutons: Demander / Allumage / Ravitailer + badge)
+│   └── Modales (DemanderModal, AllumageModal, RavitaillementModal)
+├── ModalQueueProvider (wrap AppContent)
+│   ├── LaunchAlertModal (priority 0, zIndex 9999)
+│   └── RavitaillementAlertModal (priority 1, zIndex 9998)
+```
+
+### 3 Modales d'Action (useState de visibilité, pas de navigation)
+
+| Modale | Titre exact | Couleur | Fichier | Action |
+|---|---|---|---|---|
+| 1 | DEMANDER DU CARBURANT | Vert `#00FF66` | `DemanderModal.tsx` | Crée capsule `pending` avec `expires_at = now + 24h` |
+| 2 | ALLUMAGE MOTEURS | Orange `#FF6B1A` | `AllumageModal.tsx` | Sélection carburant `active` → `launch_requested` + countdown forçage |
+| 3 | RAVITAILLER LES AMIS | Dark `#1A1A24` | `RavitaillementModal.tsx` | Liste demandes `pending` reçues → FOURNIR (→`active`) ou REFUSER (→`rejected`) |
+| Alert Launch | ALLUMAGE DEMANDÉ | Orange `#FF6B1A` | `LaunchAlertModal.tsx` | Overlay plein écran si `launch_requested` où user est débiteur. Swipe-to-confirm → `resolved` |
+| Alert Ravit | DEMANDE DE RAVITAILLEMENT | Dark `#1A1A24` | `RavitaillementAlertModal.tsx` | Overlay plein écran si `pending` reçu. Swipe-to-confirm → `active` |
+
+### Modal Queue System (`src/context/ModalQueueContext.tsx`)
+
+File de priorité pour les modales alerte :
+- **Priority 0** : `LaunchAlertModal` (launch_requested entrant) — zIndex 9999, timer auto
+- **Priority 1** : `RavitaillementAlertModal` (pending reçu) — zIndex 9998, deferrable
+- `"Plus tard"` = dismiss permanent de la queue (accessible via bouton manuel + badge)
+- `AllumageModal` peut être interrompu par une alerte (l'alerte s'affiche par-dessus)
+- `dismissedIds` : Set d'IDs dismissés, empêche le ré-affichage auto
 
 ---
 
-## Mécaniques de Base (Core Loop)
+## Logique Métier & Cycle de Vie des Capsules
 
-1. **Demande :** User A réclame verre à User B (boisson + motif obligatoire). Statut `pending`.
-2. **Validation :** B accepte/refuse. Accepté → statut `active` = carburant. `solde_global` ajusté par trigger DB.
-3. **Ardoise :** Capsules validées = carburant, affichées dans feed Dashboard + onglet Activité.
-4. **Décollage :** Clic "DÉCAPSULER" → statut `resolved`, `resolved_at` auto-set. Altitude creditor +1. Avatar propulsé sur jauge. Haptique succès.
+### Statuts (6 au total)
 
-### Règle Altitude (Pivot)
+| Statut | Signification | Effet |
+|---|---|---|
+| `pending` | Demande envoyée, en attente du débiteur | Visible dans Modale 3 du débiteur ; expire après 24h |
+| `active` | Dette validée ("FOURNIR") | +1 réservoir du créditeur (max 5/5) |
+| `launch_requested` | Mise à feu demandée | Modale plein écran chez le débiteur ; retombe en `active` après 1h |
+| `resolved` | Verre bu (validé OU forcé) | +1 altitude créditeur, -1 réservoir ; marqueur `validated` ou `forced` |
+| `rejected` | Demande refusée | Disparaît des listes ; notification au créditeur |
+| `expired` | Demande expirée (24h sans réponse) | Disparaît des listes ; notification au créditeur |
 
-- **Altitude** = Σ(`amount` où `creditor_id = userId` ET `status = 'resolved'`)
-- Score cumulatif, jamais négatif. Tous commencent à 0 (Terre/Houston).
-- Capsules `active` = carburant, ne font PAS monter sur jauge.
-- `calculateAltitude()` dans `src/utils/karma.ts`
+### Rôles
+
+- **CRÉDITEUR** : celui à qui l'on doit le verre (il demande, il consomme, il monte en altitude).
+- **DÉBITEUR** : celui qui doit le verre (il ravitaille, il valide l'allumage).
+
+### Règles de Score
+
+- **Altitude** = Σ(capsules où `creditor_id = userId` ET `status = 'resolved'`). Cumulatif, jamais négatif. 0 = Terre.
+- **Réservoir (Tank)** = Σ(capsules où `creditor_id = userId` ET `status = 'active'`). Plafonné à `TANK_MAX_CAPACITY = 5`.
+- **Carburant en combustion** = Σ(capsules où `creditor_id = userId` ET `status = 'launch_requested'`).
+- `amount` hardcoded à 1 partout (plus de sélecteur de quantité — champ conservé en DB/types pour compat).
+- Seule la consommation réelle (passage en `resolved`) fait monter sur le leaderboard.
+
+### Constantes Centralisées (`src/constants/game.ts`)
+
+```ts
+TANK_MAX_CAPACITY = 5
+PENDING_EXPIRY_HOURS = 24
+FORCE_IGNITION_DELAY_MINUTES = 3
+LAUNCH_TIMEOUT_HOURS = 1
+```
+
+Toutes les durées sont des constantes, jamais de valeurs en dur disséminées.
+
+### Temps, Expiration, Retombée
+
+- **Expiration pending (24h)** : `handleExpiryCheck()` au mount du Cockpit + à l'ouverture des modales. `pending` → `expired` + toast créditeur.
+- **Forçage allumage (3 min)** : bouton de forçage inactif pendant 3 min après `launch_requested`. Countdown visible. Confirmation obligatoire. Marqueur `forced` (distinct de `validated`).
+- **Retombée allumage (1h)** : `handleLaunchTimeoutCheck()` au mount. `launch_requested` → `active` (retombée) + toast créditeur. Aucune donnée perdue.
+
+### Notifications (HoustonToast)
+
+| Événement | Type toast | Message |
+|---|---|---|
+| Refus | `danger` | "🚫 [Débiteur] a refusé de te ravitailler ([Boisson])." |
+| Expiration | `warning` | "⏳ Ta demande à [Débiteur] a expiré sans réponse." |
+| Retombée | `warning` | "🔥 Ta mise à feu n'a pas abouti : le carburant est retourné dans ton réservoir." |
+| Allumage forcé | `warning` | "🔥 Allumage forcé — carburant consommé sans validation de [Débiteur]." |
+
+---
+
+## Persistance Mock State
+
+L'app tourne sur mock data persistée via AsyncStorage :
+- **Key** : `"capsule_mock_state"` dans `CapsuleProvider.tsx`
+- **Au mount** : `AsyncStorage.getItem` → si trouvé, `JSON.parse` → `setCapsules(parsed)`. Sinon → `MOCK_CAPSULES`.
+- **À chaque mutation** : `updateCapsules(next)` fait `setCapsules(next)` directement (next calculé hors updater). AsyncStorage persist via `useEffect` sur `capsules` (skip premier render).
+- **capsulesRef** : ref qui track le dernier état pour lecture synchrone dans les handlers (évite les side effects dans les state updaters).
+- **hydrated flag** : empêche les checks d'expiration/retombée de tourner avant chargement AsyncStorage.
+- Quand l'app passera en Supabase réel, ce cache sera ignoré.
+
+---
+
+## Schéma DB (Supabase)
+
+### Tables
+
+| Table | Colonnes | RLS |
+|---|---|---|
+| `profiles` | `id` (UUID PK, FK auth.users), `pseudo` (unique), `avatar_url`, `solde_global` (int, default 0), `created_at` | SELECT tous authentifiés, UPDATE propriétaire |
+| `capsules` | `id`, `creditor_id`, `debtor_id`, `drink_type`, `amount`, `reason`, `status` (`pending`/`active`/`launch_requested`/`resolved`/`rejected`/`expired`), `created_at`, `resolved_at`, `expires_at`, `launch_requested_at`, `resolution` (`validated`/`forced`/`null`) | SELECT/INSERT/DELETE participants uniquement |
+
+### Migrations SQL
+
+| Migration | Description |
+|---|---|
+| 0001_init.sql | Schéma initial (tickets), triggers solde, RLS, Realtime |
+| 0002_rpc_tickets.sql | RPC sécurité (accept_ticket, pay_ticket) |
+| 0003_refonte_capsules.sql | Rename tickets→capsules, add drink_type/amount/resolved_at, status paid→resolved |
+| 0004_double_validation.sql | Add `pending_launch` status, RPCs `request_launch`/`authorize_launch` |
+| 0005_cockpit_pivot.sql | Rename `pending_launch`→`launch_requested`, add `rejected`/`expired` statuses, add `expires_at`/`launch_requested_at`/`resolution` columns, RPCs `force_launch`/`refuse_capsule`, trigger updated |
+
+### RPC (SECURITY DEFINER)
+
+| Fonction | Règles |
+|---|---|
+| `accept_capsule(capsule_uuid)` | Debtor only, `pending`→`active` |
+| `refuse_capsule(capsule_uuid)` | Debtor only, `pending`→`rejected` |
+| `request_launch(capsule_uuid)` | Creditor only, `active`→`launch_requested`, set `launch_requested_at = now()` |
+| `authorize_launch(capsule_uuid)` | Debtor only, `launch_requested`→`resolved`, `resolution = 'validated'` |
+| `force_launch(capsule_uuid)` | Creditor only, `launch_requested`→`resolved`, `resolution = 'forced'` |
 
 ---
 
@@ -93,144 +204,96 @@ Capsule = app mobile suivi dettes sociales de bar, RPG spatial entre amis. Chaqu
 
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────┐     ┌──────────────────┐
-│   Écran      │────▶│  Hook             │────▶│  Service    │────▶│  Supabase        │
-│  (app/)      │     │  (hooks/)         │     │  (services/) │     │  RPC / Query     │
-│              │◀────│  useQuery         │◀────│              │◀────│                  │
-└─────────────┘     │  useMutation      │     └─────────────┘     └──────┬───────────┘
-                    └────────┬─────────┘                                 │
-                             │ invalidateQueries                          │ Trigger
-                             ▼                                            ▼
-                    ┌──────────────────┐                          ┌──────────────────┐
-                    │  TanStack Cache  │                          │  recalcul solde  │
-                    │  (queryClient)   │                          │  (auto DB)       │
-                    └──────────────────┘                          └──────────────────┘
-                             ▲
-                             │ Realtime event
-                    ┌────────┴─────────┐
-                     │  Supabase Channel │
-                     │  (capsules_realtime)│
-                    └──────────────────┘
+│   Écran      │────▶│  CapsuleProvider  │────▶│  Service    │────▶│  Supabase        │
+│  (app/)      │     │  (context/)       │     │  (services/) │     │  RPC / Query     │
+│              │◀────│  useState +       │◀────│              │◀────│                  │
+└─────────────┘     │  AsyncStorage      │     └─────────────┘     └──────┬───────────┘
+                     └────────┬─────────┘                                 │ Trigger
+                              │ useMemo (derived)                          ▼
+                              ▼                                   ┌──────────────────┐
+                     ┌──────────────────┐                        │  recalcul solde  │
+                     │  Listes filtrées   │                        │  (auto DB)       │
+                     │  + métriques       │                        └──────────────────┘
+                     └──────────────────┘
 ```
 
-**Flux données :**
-1. Écran appelle hook (`useCapsules`, `useProfiles`, `useAuthContext`)
-2. Hook utilise TanStack Query (`useQuery` read, `useMutation` write)
-3. Service appelle Supabase (query directe ou RPC `SECURITY DEFINER`)
-4. Mutation réussie → `queryClient.invalidateQueries()` → refetch auto
-5. Changement externe → Supabase Realtime → channel → `invalidateQueries()` → UI rafraîchie
-6. **Altitude** calculé frontend via `calculateAltitude(capsules, userId)` = Σ(amount where creditor + resolved). `solde_global` DB maintenu par trigger pour requêtes serveur.
+**État actuel** : `CapsuleProvider` utilise mock data + AsyncStorage. Hooks/services Supabase prêts mais pas encore branchés aux écrans.
 
 ---
 
-## Sécurité & Schéma DB
-
-### Tables
-
-| Table | Colonnes | RLS |
-|---|---|---|
-| `profiles` | `id` (UUID PK, FK auth.users), `pseudo` (unique), `avatar_url`, `solde_global` (int, default 0), `created_at` | SELECT tous authentifiés, UPDATE propriétaire |
-| `capsules` | `id` (UUID PK), `creditor_id` (FK), `debtor_id` (FK), `drink_type` (text), `amount` (int, default 1), `reason` (text), `status` (`pending`/`active`/`resolved`), `created_at`, `updated_at`, `resolved_at` | SELECT/INSERT/DELETE participants uniquement |
-
-### RPC (SECURITY DEFINER)
-
-| Fonction | Règles |
-|---|---|
-| `accept_capsule(capsule_uuid)` | Vérifie `auth.uid() = debtor_id` ET `status = 'pending'` → `active` |
-| `resolve_capsule(capsule_uuid)` | Vérifie `auth.uid() = creditor_id OR debtor_id` ET `status = 'active'` → `resolved` + auto-set `resolved_at` |
-
-### Trigger : `recalculate_solde`
-
-- **INSERT + status='active'** : `creditor_id -amount`, `debtor_id +amount`
-- **UPDATE pending→active** : `creditor_id -amount`, `debtor_id +amount`
-- **UPDATE active→resolved** : `creditor_id +amount`, `debtor_id -amount`, auto-set `resolved_at = now()`
-- **UPDATE active→pending** (rollback) : `creditor_id +amount`, `debtor_id -amount`
-- **UPDATE pending→resolved** : **BLOQUÉ**
-- **UPDATE resolved→anything** : **BLOQUÉ**
-- **DELETE + status='active'** : reverse solde (`creditor_id +amount`, `debtor_id -amount`)
-- **DELETE + status='pending'/'resolved'** : aucun impact
-
-### Auto-création profil
-
-Trigger `on_auth_user_created` : inscription crée auto profil dans `profiles` avec `pseudo` = métadonnée `pseudo` ou partie avant `@` de l'email.
-
----
-
-## Composant UI Central : OrbitTrack (L'Orbite)
-
-`src/components/GravJauge.tsx`
-
-- Ligne pointillée verticale (`border-dashed border-white/50`) de Terre → ISS
-- Conteneur `h-[55vh]` s'étire de Terre à ISS
-- **Positionnement avatars** : `bottom: (altitude / maxAltitude) * 100`%
-- **Cosmonaute SVG** : casque rond + corps + backpack. Photo utilisateur dans visière (overlay `expo-image` `rounded-full`)
-- **Badge score** : blanc `bg-white text-black border-2 border-black rounded-full`. Texte `+X 🍻` ou `Gravité Zéro`
-- **Couronne 👑** si altitude max (leader), `absolute -top-5 -right-2`
-- **ISS 🛰️** en haut, **Terre 🌍** en bas
-- **Animation propulsion** : `withSpring` énergique (damping 6, stiffness 150) + float `withRepeat`
-- **Altitude 0** : avatar sur Terre, bordure `earth-dark`
-- **Altitude > 0** : avatar flotte, bordure `neon-green`
-
----
-
-## Composants UI (Refonte v3 — Cartoon)
+## Composants UI
 
 | Composant | Fichier | Description |
 |---|---|---|
-| `SpaceBackground` | `src/components/SpaceBackground.tsx` | Dégradé `#1a233a→#0d111a` + étoiles SVG + ISS 🛰️ top-left + Terre SVG bottom (cercle bleu + taches vertes) |
-| `CapsuleLogo` | `src/components/CapsuleLogo.tsx` | Logo hybride capsule/vaisseau SVG (28x28) |
-| `GravJauge` | `src/components/GravJauge.tsx` | OrbitTrack : ligne pointillée + cosmonautes SVG avec photos dans visières + badges score + couronne leader |
-| `CapsuleCard` | `src/components/CapsuleCard.tsx` | Cartes blanches cartoon `#f8f9fa` + `border-2 border-black` + hard shadows. Header photo + "te doit X [drink] [emoji]". Bouton vert `#4ade80` DÉCAPSULER |
-| `PendingAlertBanner` | `src/components/PendingAlertBanner.tsx` | Bannière jaune "X capsule(s) en attente validation" |
-| `ProfileSwitcher` | `src/components/ProfileSwitcher.tsx` | Dropdown dev-only "Vue de : [User]" |
-| `LaunchModal` | `src/components/LaunchModal.tsx` | Bottom sheet : ami (chips) + drink_type (prédéfini + custom) + quantité (+/−) + motif + bouton LANCER |
-| `ErrorBoundary` | `src/components/ErrorBoundary.tsx` | Error boundary global + resetKey remount |
+| `SpaceBackground` | `SpaceBackground.tsx` | Dégradé `#1a233a→#0d111a` + étoiles SVG (Terre retirée, gérée par TrajectoryMap) |
+| `CapsuleLogo` | `CapsuleLogo.tsx` | Logo hybride capsule/vaisseau SVG |
+| `TrajectoryMap` | `TrajectoryMap.tsx` | Carte trajectoire parabolique (courbe bézier quadratique). Earth + ISS SVG, avatars positionnés sur courbe, dots rangs. Clustering vertical anti-chevauchement. |
+| `UserStatusCard` | `UserStatusCard.tsx` | Carte compacte : avatar + pseudo + rank + FuelGauge + statut carburant |
+| `FuelGauge` | `FuelGauge.tsx` | Jauge carburant horizontale 5 segments (flex-1 min-w-0, pas de minWidth) |
+| `TableauBord` | `TableauBord.tsx` | 3 boutons (vert/orange/dark) + badge + icônes Lucide |
+| `SwipeToConfirm` | `SwipeToConfirm.tsx` | Widget slide-to-unlock. `PanResponder` natif RN. |
+| `LaunchAlertModal` | `LaunchAlertModal.tsx` | Overlay orange `#FF6B1A` plein écran + SwipeToConfirm + overlay "Validé ✅". Split outer/inner. |
+| `RavitaillementAlertModal` | `RavitaillementAlertModal.tsx` | Overlay dark `#1A1A24` plein écran + SwipeToConfirm + boutons Refuser/Plus tard. Queue-aware. |
+| `DemanderModal` | `DemanderModal.tsx` | Modale 1 (vert) : ami + boisson + motif. Dark theme. |
+| `AllumageModal` | `AllumageModal.tsx` | Modale 2 (orange) : liste carburant `active` + `launch_requested` + countdown forçage. Dark theme. |
+| `RavitaillementModal` | `RavitaillementModal.tsx` | Modale 3 (dark) : demandes `pending` reçues + FOURNIR/REFUSER + timer. Dark theme. |
+| `CapsuleCard` | `CapsuleCard.tsx` | Carte activité (dark theme). 3 modes : creditor, debtor, observer (double avatar). Badges colorés, phrases contextuelles, boutons si impliqué. |
+| `ProfileSwitcher` | `ProfileSwitcher.tsx` | Dropdown dev-only "Vue de : [User]" |
+| `ErrorBoundary` | `ErrorBoundary.tsx` | Error boundary global |
 
-### Design System Cartoon
+### Système de Couleurs Unifié (`src/constants/theme.ts`)
 
-- **Bordures** : `border-2 border-black` sur tout élément interactif
-- **Hard shadows** : inline `shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 5` (no blur)
-- **Arrondis** : `rounded-xl` ou `rounded-2xl`
-- **Bouton press** : `active:translate-y-1` + shadow réduit
-- **Cartes** : fond blanc `#f8f9fa`, texte noir, contrast maximal avec fond spatial
+**Palettes :** `COLORS.space.*` (fonds dark), `COLORS.neon.*` (actions), `COLORS.earth.*` (décor).
+
+**`ACTION_COLORS`** — une couleur par concept, utilisé partout (badges, boutons, textes) :
+
+| Concept | Couleur | Hex |
+|---|---|---|
+| Ravitaillement / Carburant | Vert neon | `#00FF66` |
+| Mise à feu / Allumage | Orange neon | `#FF6B1A` |
+| Refus / Destructif | Rouge neon | `#FF3B30` |
+| En attente / Timer | Jaune neon | `#FFD60A` |
+| Résolu / Décollé | Cyan neon | `#00F0FF` |
+| Expiré | Gris | `#9ca3af` |
+
+**`ROLE_COLORS`** :
+
+| Rôle | Couleur | Hex |
+|---|---|---|
+| Current user | Cyan | `#00F0FF` |
+| Creditor | Vert | `#00FF66` |
+| Debtor | Orange | `#FF6B1A` |
+
+**Règle :** Plus de couleurs `cartoon.*` (ancien thème clair). Tout est `neon.*` sur fond `space.*`.
+
+### Design System Dark
+
+- **Fonds** : `#0D0D11` (deep), `#1a1a24` (surface), `#22222E` (card), `#2E2E3A` (border)
+- **Bordures** : `border-2 border-[#2E2E3A]` (ou `border` pour subtil)
+- **Boutons** : bordure couleur neon + fond translucide (`bg-[#color]/15`), texte couleur neon. Boutons primaires : fond plein.
+- **Cartes** : fond `#1a1a24`, texte `text-white`, sous-texte `text-white/40`
+- **Hard shadows** : retirés (invisibles sur dark)
 
 ---
 
-## Navigation (Refonte v2)
+## Navigation
 
 ```
 / (root)
-├── _layout.tsx          → Stack navigator, headerShown: false
-│                          Screens: "login", "(tabs)"
-│                          Redirect to /login if no session
-│
-├── login.tsx            → Login/Register screen (standalone, no tab bar)
-│
-└── (tabs)/
-    ├── _layout.tsx       → Tabs navigator with 4 tabs
-    │                       Realtime hooks (useCapsulesRealtime, useProfilesRealtime)
+    ├── _layout.tsx          → Stack navigator, headerShown: false
+    │                          QueryClientProvider → AuthProvider → HoustonToastProvider → ErrorBoundary → SafeAreaProvider
     │
-    ├── index.tsx         → Tab "Dashboard" (LayoutDashboard icon)
-    │                       Layout asymétrique : Jauge gauche 35% + bouton orange + feed droite
-    │                       SpaceBackground, ProfileSwitcher, LaunchModal
+    ├── login.tsx            → Login/Register screen
     │
-    ├── activite.tsx      → Tab "Activité" (Activity icon)
-    │                       Historique complet avec filtres (Tout/Pending/Active/Resolved)
+    └── (tabs)/
+        ├── _layout.tsx       → Tabs (Dashboard, Activité, Amis, Profil) — mémoïsé via memo()
+        │                       CapsuleProvider wrapper (pas de realtime hooks en mode mock)
     │
-    ├── amis.tsx          → Tab "Amis" (Users icon)
-    │                       Classement par altitude, clic pour voir capsules en commun
-    │
-    └── profil.tsx        → Tab "Profil" (User icon)
-                            Avatar, stats (altitude + capsules totales), paramètres, déconnexion
+    ├── index.tsx         → Cockpit (UserStatusCard + TrajectoryMap + TableauBord + modales)
+    ├── activite.tsx      → Historique + toggle scope (Mes activités/Amis) + 5 filtres (Ravitaillement, Carburant, Mise à feu, Terminées)
+    ├── amis.tsx          → Classement par altitude (dark theme)
+    └── profil.tsx        → Avatar, stats (altitude, tankLevel, capsules), karma, déconnexion (dark theme)
 ```
-
----
-
-## Distribution
-
-- **Dev :** Expo Go. `npx expo start` → QR code / lien.
-- **OTA :** `eas update` publie code JS sur Expo Cloud → MAJ au prochain lancement.
-- **Backend :** Supabase Cloud (gratuit, hébergé).
-- **Deep linking :** `scheme: "capsule"` dans `app.json`. Emails de confirmation redirigent vers `capsule://login`.
 
 ---
 
@@ -238,63 +301,69 @@ Trigger `on_auth_user_created` : inscription crée auto profil dans `profiles` a
 
 ```text
 .
-├── assets/                          # Assets visuels (icon, splash, adaptive icons)
-├── supabase/
-│   └── migrations/
-│       ├── 0001_init.sql            # Schéma tables, triggers solde, RLS, Realtime
-│       ├── 0002_rpc_tickets.sql     # RPC sécurité (accept_ticket, pay_ticket) + trigger complet
-│       └── 0003_refonte_capsules.sql # Rename tickets→capsules, add drink_type/amount/resolved_at, status paid→resolved, new RPCs
+├── supabase/migrations/
+│   ├── 0001_init.sql
+│   ├── 0002_rpc_tickets.sql
+│   ├── 0003_refonte_capsules.sql
+│   ├── 0004_double_validation.sql
+│   └── 0005_cockpit_pivot.sql          # Cockpit pivot : launch_requested, rejected, expired, force_launch, refuse_capsule
 ├── src/
-│   ├── app/                         # Expo Router screens
-│   │   ├── (tabs)/
-│   │   │   ├── _layout.tsx          # Onglets (Dashboard, Activité, Amis, Profil) + Realtime hooks + tab bar dynamique
-│   │   │   ├── index.tsx            # Écran Dashboard (OrbitTrack + bouton orange cartoon + feed + LaunchModal + ProfileSwitcher)
-│   │   │   ├── activite.tsx         # Écran Activité (Historique complet + filtres par statut)
-│   │   │   ├── amis.tsx             # Écran Amis (Classement par altitude + détails capsules en commun)
-│   │   │   └── profil.tsx           # Écran Profil (Avatar, stats, paramètres, déconnexion)
-│   │   ├── _layout.tsx              # Root layout : QueryClientProvider, AuthProvider, HoustonToastProvider, ErrorBoundary
-│   │   └── login.tsx                # Auth (useAuthContext) + vérif session avant navigation
-│   ├── components/
-│   │   ├── CapsuleCard.tsx          # Carte capsule cartoon (blanc, border-black, hard shadows, drink emojis)
-│   │   ├── ErrorBoundary.tsx        # Error boundary global "Houston, on a un problème 🚨" + resetKey remount
-│   │   ├── GravJauge.tsx            # OrbitTrack : ligne pointillée + cosmonautes SVG + photos visière + badges score
-│   │   ├── LaunchModal.tsx          # Bottom sheet (ami + boisson + quantité + motif)
-│   │   ├── PendingAlertBanner.tsx   # Bannière jaune "X capsule(s) en attente"
-│   │   ├── ProfileSwitcher.tsx      # Dropdown dev-only "Vue de : [User]"
-│   │   ├── SpaceBackground.tsx      # Dégradé spatial + étoiles SVG + ISS + Terre
-│   │   └── CapsuleLogo.tsx          # Logo hybride capsule/vaisseau SVG
-│   ├── constants/
-│   │   └── theme.ts                 # Palette couleurs + labels statuts + couleurs statuts + DRINK_TYPES
-│   ├── context/
-│   │   ├── AuthProvider.tsx         # Context d'auth Supabase (useAuth wrapped)
-│   │   └── HoustonToastContext.tsx  # Toasts animés (FadeInUp/FadeOutUp) — 4 niveaux + SafeAreaInsets
+│   ├── app/
+    │   │   ├── (tabs)/
+    │   │   │   ├── _layout.tsx              # Tabs (memoized) + CapsuleProvider
+    │   │   │   ├── index.tsx                # Cockpit (Radar + CapsuleShip + TableauBord + 4 overlays)
+    │   │   │   ├── activite.tsx             # Historique + filtres (7 statuts)
+    │   │   │   ├── amis.tsx                 # Classement altitude
+    │   │   │   └── profil.tsx               # Profil (altitude, tankLevel, karma, rank)
+│   │   ├── _layout.tsx                  # Root: QueryClient → Auth → HoustonToast → ErrorBoundary → SafeArea
+│   │   └── login.tsx
+    │   ├── components/
+    │   │   ├── CapsuleLogo.tsx
+    │   │   ├── TrajectoryMap.tsx             # Courbe parabolique Earth→ISS, avatars, clustering anti-chevauchement
+    │   │   ├── UserStatusCard.tsx            # Carte compacte user (avatar + rank + FuelGauge)
+    │   │   ├── FuelGauge.tsx                 # Jauge 5 segments horizontale (flex-1 min-w-0)
+    │   │   ├── CapsuleCard.tsx              # Carte activité (3 modes: creditor/debtor/observer, dark theme)
+    │   │   ├── DemanderModal.tsx            # Modale 1 : DEMANDER DU CARBURANT (dark theme)
+    │   │   ├── AllumageModal.tsx            # Modale 2 : ALLUMAGE MOTEURS (dark theme + countdown)
+    │   │   ├── RavitaillementModal.tsx      # Modale 3 : RAVITAILLER LES AMIS (dark theme)
+    │   │   ├── RavitaillementAlertModal.tsx # Alert overlay : DEMANDE DE RAVITAILLEMENT (swipe-to-confirm, queue-aware)
+    │   │   ├── LaunchAlertModal.tsx         # Alert overlay : ALLUMAGE DEMANDÉ (swipe-to-confirm, split outer/inner)
+    │   │   ├── SwipeToConfirm.tsx           # Widget slide-to-unlock (PanResponder natif RN)
+    │   │   ├── TableauBord.tsx              # 3 boutons (vert/orange/dark) + badge
+    │   │   ├── ProfileSwitcher.tsx
+    │   │   ├── SpaceBackground.tsx          # Dégradé + étoiles (Terre retirée)
+    │   │   └── ErrorBoundary.tsx
+    │   ├── context/
+    │   │   ├── AuthProvider.tsx
+    │   │   ├── CapsuleProvider.tsx          # Mock store + AsyncStorage + handlers + allUserCapsules + allFriendsCapsules
+    │   │   ├── ModalQueueContext.tsx        # File priorité alertes (launch > ravitaillement, dismissedIds)
+    │   │   └── HoustonToastContext.tsx
 │   ├── data/
-│   │   └── mocks.ts                 # Mock data : 3 users (pravatar.cc), 1 pending, 2 active, 5 resolved + DRINK_EMOJIS
-│   ├── hooks/
-│   │   ├── useAuth.ts               # Auth Supabase : getSession, onAuthStateChange, isMounted ref pour Strict Mode
-│   │   ├── useProfiles.ts           # TanStack Query useQuery + useProfilesRealtime (channel unique)
-│   │   ├── useCapsules.ts           # TanStack Query useQuery/useMutation + useCapsulesRealtime (channel unique)
-│   │   └── useTickets.ts            # Re-export de useCapsules (backward compat)
+│   │   └── mocks.ts                     # 3 users, 13 capsules (pending/active/launch_requested/resolved/rejected/expired)
+    │   ├── hooks/
+    │   │   ├── useAuth.ts
+    │   │   ├── useCapsules.ts               # TanStack Query (prêt pour Supabase, non branché en mode mock)
+    │   │   └── useProfiles.ts
 │   ├── lib/
-│   │   ├── queryClient.ts           # Config TanStack Query (staleTime 30s, gcTime 5min, retry 2)
-│   │   └── supabase.ts              # Client Supabase + adaptateur AsyncStorage
+│   │   ├── queryClient.ts
+│   │   └── supabase.ts
 │   ├── services/
-│   │   ├── profiles.ts              # fetchProfile, fetchAllProfiles, updateProfilePseudo, updateProfileAvatar
-│   │   ├── capsules.ts              # fetchActive/Pending/All, createCapsule, acceptCapsule (RPC), refuseCapsule, resolveCapsule (RPC)
-│   │   └── tickets.ts               # Re-export de capsules.ts (backward compat)
+│   │   └── capsules.ts                  # fetchActive/Pending/All, createCapsule (expires_at), acceptCapsule, refuseCapsule (RPC), requestLaunch, authorizeLaunch, forceLaunch
 │   ├── types/
-│   │   └── index.ts                 # UserProfile, Capsule (creditor_id, debtor_id, drink_type, amount, reason, status, resolved_at), CapsuleTicket (compat)
+│   │   └── index.ts                     # CapsuleStatus (6), CapsuleResolution, Capsule (+expires_at, launch_requested_at, resolution)
 │   └── utils/
-│       └── karma.ts                 # calculateKarma + calculateKarmaForAll + calculateAltitude + calculateAltitudeForAll
-├── app.json                         # Config Expo (dark mode, scheme "capsule", Supabase credentials, redirectUrl)
-├── babel.config.js                  # babel-preset-expo + nativewind/babel
-├── metro.config.js                  # Metro + withNativeWind
-├── tailwind.config.js               # Tailwind v3 + preset nativewind + couleurs custom (space/neon/earth)
-├── global.css                       # @tailwind base/components/utilities
-├── tsconfig.json                    # extends expo/tsconfig.base, strict, ignoreDeprecations 6.0
-├── eslint.config.js                 # eslint-config-expo/flat + no-unused-vars warn
-├── nativewind-env.d.ts             # Triple-slash: nativewind/types + module "*.css"
-└── context.md                       # Ce fichier
+│       ├── karma.ts                     # calculateAltitude, calculateKarma
+│       ├── ranks.ts                     # OrbitalRank, getRank, getNextRank, getProgressToNext
+│       └── capsule.ts                   # formatTimeRemaining, formatCountdown, isExpired, isLaunchTimedOut, canForceLaunch, getSecondsUntilForce, getSecondsUntilFallback, computeExpiresAt
+├── app.json
+├── babel.config.js
+├── metro.config.js
+├── tailwind.config.js
+├── global.css
+├── tsconfig.json
+├── eslint.config.js
+├── nativewind-env.d.ts
+└── context.md
 ```
 
 ---
@@ -303,15 +372,26 @@ Trigger `on_auth_user_created` : inscription crée auto profil dans `profiles` a
 
 - **Pas de commentaires** dans le code (règle AGENTS.md)
 - **NativeWind v4 / Tailwind v3** (jamais Tailwind v4)
-- **`useAuthContext()`** partout dans écrans. Jamais `useAuth()` directement hors `AuthProvider.tsx`
-- **Mutations via TanStack Query** : `useMutation` + `onSuccess: invalidateQueries`. Jamais `useState` + `useEffect` pour fetch
-- **Realtime** : hooks séparés `useCapsulesRealtime` + `useProfilesRealtime` appelés **une fois** dans `(tabs)/_layout.tsx`. Channels uniques (`capsules_realtime_${counter}`) + `channel.unsubscribe()` + `isMounted` ref pour Strict Mode
-- **Sécurité** : transitions statut via RPC Supabase (`accept_capsule`, `resolve_capsule`), jamais updates directes
-- **Styling** : NativeWind (`className="..."`), palette `space-*`, `neon-*`, `earth-*` dans `tailwind.config.js`. Cartoon : `border-2 border-black` + hard shadows inline
-- **SafeArea** : `SafeAreaView` `edges={["top"]}` sur écrans. Tab bar height dynamique (`60 + insets.bottom`). Toasts utilisent `useSafeAreaInsets` pour `top`
-- **useAuth** : ref `isMounted` pour éviter state updates post-unmount en Strict Mode. `getSession()` + `fetchProfile()` wrappés dans guards `isMounted.current`
-- **Reanimated** : `cancelAnimation()` dans cleanup `useEffect` pour éviter animations orphelines en Strict Mode
-- **Hard shadows** : inline styles `shadowOffset: {width: X, height: Y}, shadowOpacity: 1, shadowRadius: 0, elevation: N`
+- **`useCapsuleStore()`** pour accès données. `useAuthContext()` pour auth.
+- **Modales pilotées par `useState` de visibilité** — aucune navigation expo-router pour ouvrir/fermer les modales
+- **Pas de `<Modal>` RN** — les modales sont des overlays `<View style={absoluteFill}>` + animation Reanimated (slide up / fade in). Sur Fabric (RN 0.86), `<Modal>` RN ne propage pas les React Contexts → crash `NavigationStateContext`. Voir Bug History.
+- **Pas de `GestureHandlerRootView`** — `SwipeToConfirm` utilise `PanResponder` natif. `react-native-gesture-handler` retiré du projet.
+- **`<Tabs>` mémoïsé** dans `_layout.tsx` — `memo(TabsContent)` empêche `CapsuleProvider` de re-render le navigator (qui accède `NavigationStateContext` via `useNavigationBuilder`). Les screens re-render via `CapsuleStoreContext` (React Context) indépendamment.
+- **Side effects hors `setCapsules`** — `CapsuleProvider` utilise `capsulesRef` pour lire l'état courant, calcule le next state en dehors du updater, appelle `setCapsules(next)` directement. AsyncStorage persist via `useEffect` sur `capsules`. Toasts appelés avant `setCapsules`, jamais dedans.
+- **Titres des modales utilisent EXACTEMENT** les termes du cahier des charges
+- **Header et Bottom Nav impérativement en `w-full`**
+- **`GestureHandlerRootView`** : JAMAIS dans l'app. Retiré entièrement. `SwipeToConfirm` utilise `PanResponder`.
+- **Constantes de durée** centralisées dans `src/constants/game.ts` — jamais de valeurs en dur
+- **Mutations via TanStack Query** : `useMutation` + `onSuccess: invalidateQueries`
+- **Realtime** : hooks appelés une fois dans `(tabs)/_layout.tsx`. Channels uniques + `isMounted` ref
+- **Styling** : NativeWind `className="..."`, palette `space-*`, `neon-*`, `earth-*`. Dark theme partout. `ACTION_COLORS` et `ROLE_COLORS` pour cohérence des couleurs.
+- **SafeArea** : `SafeAreaView` `edges={["top"]}` sur écrans
+- **Reanimated** : `cancelAnimation()` dans cleanup `useEffect`
+- **Selected capsule pattern** : stocker l'ID dans le state, dériver l'objet capsule depuis les props/store (évite les snapshots stale)
+- **`eslint-disable`** pour `react-hooks/set-state-in-effect` quand le setState dans un useEffect est légitime (mount-time checks, auto-open modales)
+- **`eslint-disable`** pour `react-hooks/immutability` sur les `sharedValue.value =` dans `useEffect` (Reanimated)
+- **`LogBox.ignoreLogs`** pour les warnings dev-only connus (HMR Expo CLI, etc.) dans `src/app/_layout.tsx`
+- **Commit style** : Conventional Commits anglais (`feat:`, `fix:`, `refactor:`, `docs:`)
 
 ---
 
@@ -321,73 +401,113 @@ Trigger `on_auth_user_created` : inscription crée auto profil dans `profiles` a
 
 | Tâche | Description |
 |---|---|
-| Init projet | Expo Router, NativeWind v4, TypeScript, structure base |
-| Types TS | `UserProfile`, `CapsuleTicket`, `Capsule`, `CapsuleStatus` |
-| DB Supabase | Schéma SQL, triggers solde, RLS, Realtime |
-| Sécurité RPC | `accept_capsule` / `resolve_capsule` (SECURITY DEFINER), trigger complet |
-| Config Supabase | Client AsyncStorage, polyfill supprimé |
-| Alignement SDK 57 | `expo ~57`, `react-native 0.86.3`, `react 19.2.3` |
-| TanStack Query | Refactor `useCapsules` / `useProfiles`, cache partagé, invalidation Realtime |
-| Jauge Gravitationnelle | Reanimated 4 + LinearGradient + expo-image |
-| Lancer capsule | Formulaire sélection astronaute + motifs |
-| Validation bilatérale | Accepter / Refuser via RPC |
-| Décapsuler | Clôture via RPC + haptics + loading state |
-| Loading states | `pendingActionId` anti double-tap + `ActivityIndicator` |
-| Error Boundary | Fallback "Houston" + resetKey remount |
-| Temps Réel | Realtime Supabase → invalidateQueries + toasts Houston |
-| Deep linking | `scheme: "capsule"` + `emailRedirectTo` |
-| Linter & Typecheck | `tsc --noEmit` 0 erreur, `eslint` 0 warning |
-| Bugfix: Realtime channels double | Extraction hooks realtime appelés une fois dans `(tabs)/_layout.tsx` |
-| Bugfix: useAuth promesses | Ref `isMounted` + try/catch |
-| Bugfix: GravJauge transforms | Wrapper View positionnement, Animated.View transform |
-| Bugfix: login nav post-signUp | Vérif `session` avant `router.replace` |
-| Bugfix: useProfiles sans auth | `enabled: !!userId` |
-| Bugfix: HoustonToast SafeArea | `useSafeAreaInsets` |
-| Bugfix: ErrorBoundary recovery | `resetKey` forçant remount |
-| Bugfix: GravJauge animations orphelines | `cancelAnimation()` cleanup |
-| Bugfix: Tab bar masquée | `edgeToEdgeEnabled` + hauteur dynamique |
-| Bugfix: Versions incompatibles | `npx expo install --fix` + `react-native-worklets@0.10.1` |
-| Bouton Déconnexion | `signOut()` via `useAuthContext()`, redirect auto `/login` |
-| Git & GitHub | Repo `github.com/amencio/capsule`, auth PAT |
-| Refonte v2: Dashboard | Layout asymétrique, SpaceBackground, CapsuleLogo, ProfileSwitcher, LaunchModal |
-| Refonte v2: Navigation | 4 tabs (Dashboard, Activité, Amis, Profil) |
-| Refonte v2: Types | `Capsule` (creditor_id, debtor_id, drink_type, amount, reason, resolved_at) |
-| Refonte v2: DB Migration 0003 | Rename tickets→capsules, new columns, status paid→resolved, new RPCs |
-| Refonte v2: Services/Hooks | `services/capsules.ts` + `hooks/useCapsules.ts`. Old = re-exports |
-| Pivot Altitude | `calculateAltitude()` = Σ(resolved où creditor). 0 = Terre. Active = carburant. Plus de négatif |
-| Refonte v3: Cartoon | Bordures noires `border-2 border-black`, hard shadows, cartes blanches, bouton orange cartoon |
-| Refonte v3: OrbitTrack | Ligne pointillée Terre→ISS, cosmonautes SVG avec photos dans visières, badges score blancs |
-| Refonte v3: Mocks | 3 users (pravatar.cc), Thomas altitude 0, Léa 2, Camille 3 (leader) |
+| Init projet | Expo Router, NativeWind v4, TypeScript |
+| Types TS | `UserProfile`, `Capsule` (6 statuts, expires_at, launch_requested_at, resolution) |
+| DB Supabase | 5 migrations SQL, triggers solde, RLS, Realtime |
+| Sécurité RPC | `accept_capsule`, `refuse_capsule`, `request_launch`, `authorize_launch`, `force_launch` (SECURITY DEFINER) |
+| TanStack Query | `useCapsules` / `useProfiles` avec mutations + invalidation |
+| Cockpit Screen | Header w-full + Radar 1/3 + CapsuleShip 2/3 + TableauBord 3 boutons |
+| 3 Modales | DemanderModal (vert), AllumageModal (rouge + countdown), RavitaillementModal (bleu + badge) |
+| LaunchAlertModal | Modale rouge plein écran + SwipeToConfirm + overlay "Validé ✅" |
+| SwipeToConfirm | Widget slide-to-unlock avec react-native-gesture-handler Gesture.Pan() |
+| Constantes game.ts | TANK_MAX_CAPACITY=5, PENDING_EXPIRY_HOURS=24, FORCE_IGNITION_DELAY_MINUTES=3, LAUNCH_TIMEOUT_HOURS=1 |
+| Expiration 24h | `handleExpiryCheck()` au mount + à l'ouverture modales |
+| Retombée 1h | `handleLaunchTimeoutCheck()` au mount |
+| Forçage 3 min | Countdown visible + bouton inactif pendant délai + confirmation obligatoire |
+| Marqueur resolution | `validated` vs `forced` pour tracer l'historique |
+| Notifications | HoustonToast : refus, expiration, retombée, allumage forcé |
+| Persistance mock | AsyncStorage `capsule_mock_state` + hydrated flag |
+| Mocks | 13 capsules couvrant tous les statuts, timestamps relatifs |
+| Bugfix: GestureHandlerRootView root | Retiré du root (interrompait NavigationStateContext → crash dans Modals) |
+| Bugfix: selectedCapsule stale | Stocker ID au lieu de snapshot objet → dériver depuis props |
+| Bugfix: myFuelCapsules launch_requested | Inclure `launch_requested` dans la liste (pas seulement `active`) |
+| Bugfix: allumageDisabled | Basé sur `myFuelCapsules.length` (inclut launch_requested) |
+| Bugfix: LaunchAlertModal dead code | Overlay `justResolved` dupliqué supprimé |
+| Bugfix: CapsuleShip SVG fill | `fill="url(#visorClip)"` invalide → `fill="rgba(0,0,0,0.3)"` |
+| Bugfix: AllumageModal prop inutilisée | `currentUserId` retiré de l'interface |
+| Bugfix: Mock state reset au reload | AsyncStorage persistence dans CapsuleProvider |
+| Bugfix: LaunchAlertModal re-s'ouvre | `justResolved` early return avant `!currentRequest` |
+| Linter & Typecheck | `tsc --noEmit` 0 erreur, `eslint` 0 erreur/warning |
+
+### Bug History — NavigationStateContext Crash (Fabric / RN 0.86 / React 19)
+
+Le bug le plus tenace du projet : crash `NavigationStateContext` ("Couldn't find a navigation context") dans `AllumageModal` lors de la sélection de carburant à brûler. Plusieurs tentatives de fix, chacune résolvant une partie du problème :
+
+| # | Hypothèse | Fix appliqué | Résultat |
+|---|---|---|---|
+| 1 | `GestureHandlerRootView` au root casse le contexte | Retiré du root `_layout.tsx` | Crash persiste |
+| 2 | `GestureHandlerRootView` dans `<Modal>` de LaunchAlertModal interfère | Retiré de LaunchAlertModal + `if (!visible) return null` | Crash persiste |
+| 3 | `Gesture.Pan()` de `react-native-gesture-handler` interfere | Remplacé par `PanResponder` natif RN dans `SwipeToConfirm` | Crash persiste |
+| 4 | `<Modal>` RN ne propage pas les React Contexts sur Fabric (New Architecture) | Remplacé les 4 `<Modal>` par overlays `<View style={absoluteFill}>` + animation Reanimated (slide up / fade in) | Crash persiste |
+| 5 | Overlays sans `zIndex` → dashboard visible derrière | Ajout `zIndex: 500` (actions) et `zIndex: 9999` (LaunchAlert) | Affichage corrigé mais crash persiste |
+| 6 | `LaunchAlertModal` hooks Reanimated tournent même quand `visible=false` | Split en outer (gère `visible`) + inner (hooks Reanimated). Outer retourne `null` si pas visible | Crash persiste |
+| 7 | `if (!visible) return null` insuffisant sur `AllumageModal` (crash quand visible) | Ajouté sur les 4 modales | Pas suffisant |
+| 8 | `CapsuleProvider` state change → `<Tabs>` navigator re-render → `useNavigationBuilder` accède `NavigationStateContext` | `memo(TabsContent)` dans `_layout.tsx` | Crash persiste |
+| 9 | Side effects dans les `setCapsules` updaters → React Compiler | Refactor `CapsuleProvider` : `capsulesRef` + `updateCapsules(next)` + AsyncStorage via `useEffect` | Crash persiste |
+| 10 | `CapsuleProvider` inside navigator → re-render cascade | Déplacé `CapsuleProvider` au root `_layout.tsx` + `memo(AppContent)` | Crash persiste |
+| 11 | **ROOT CAUSE** : NativeWind v4 `react-native-css-interop` `printUpgradeWarning()` → `stringify()` → `Object.entries()` traverse tous les objets → tombe sur `NavigationStateContext` getter `getKey` qui throw. Déclenché quand des styles `active:` (pseudo-classes) sont ajoutés **dynamiquement** à un `<Pressable>` après le render initial (ex: bouton "DEMANDER LA MISE À FEU" qui passe de `bg-[#f97316]/20` à `bg-[#f97316] shadow-[...] active:shadow-[...] active:translate-y-0.5` quand capsule sélectionnée). | Déplacer les `active:` styles **hors du conditionnel** — toujours présents dès le render initial, seules les couleurs/shadows statiques changent | **Fix appliqué** |
+
+**ROOT CAUSE DÉFINITIVE (fix #11) :** Le crash `NavigationStateContext` n'avait **rien à voir** avec la navigation, Fabric, les `<Modal>`, ou `CapsuleProvider`. C'était un bug de NativeWind v4 (`react-native-css-interop` 0.2.7) : quand des pseudo-classes CSS (`active:`, `hover:`, etc.) sont ajoutées dynamiquement à un composant après son render initial, NativeWind déclenche un "upgrade warning" pour alerter que le composant va être remounté. Pour générer le message de warning, il sérialise (`JSON.stringify` avec replacer récursif) les props du composant. Ce sérialiseur traverse tous les objets accessibles, y compris les context React qui ont des getters qui throw par défaut (comme `NavigationStateContext.getKey`).
+
+**Leçons apprises :**
+- **NativeWind v4 + pseudo-classes dynamiques = crash** : Ne JAMAIS ajouter des styles `active:`, `hover:`, `focus:` dynamiquement (via conditionnel) après le render initial. Toujours les inclure dans le className de base. Seules les couleurs et shadows statiques peuvent être conditionnels.
+- Sur Fabric (RN 0.86+), `<Modal>` RN ne propage pas les React Contexts comme sur l'ancienne architecture (Bridge). Préférer des overlays `<View>` absolus.
+- `GestureHandlerRootView` appelle `maybeInitializeFabric()` → `RNGestureHandlerModule.install()` qui peut interférer avec la propagation de contexte. Éviter si pas nécessaire.
+- Les side effects dans les state updaters (`setX((prev) => { sideEffect(); return next; })`) sont interdits par React 19 / React Compiler. Toujours calculer le next state en dehors, puis appeler `setX(next)` directement.
+- `PanResponder` (RN natif) est suffisant pour un swipe-to-unlock simple. `react-native-gesture-handler` apporte des complications non nécessaires.
+- `memo()` sur les navigators (Tabs, Stack) est une bonne pratique pour éviter les re-renders cascade depuis les providers.
+
+**Fichiers supprimés pendant le debug :**
+- `FuelGauge.tsx` (dead code — orphelin, plus importé)
+- `useTickets.ts` (dead code — alias non utilisé)
+- `react-native-gesture-handler` retiré de `package.json`
+
+**Fichiers modifiés pendant le debug :**
+- `_layout.tsx` (tabs) : retrait realtime hooks + retrait `useAuthContext`. Simple `<Tabs>` sans CapsuleProvider.
+- `_layout.tsx` (root) : `CapsuleProvider` déplacé ici (au-dessus de `AppContent`). `memo(AppContent)` pour bloquer re-render cascade vers navigators.
+- `CapsuleProvider.tsx` : `capsulesRef` + `updateCapsules` + AsyncStorage via `useEffect` + toasts hors updaters
+- `AllumageModal.tsx` : `<Modal>` → overlay `<View>` + animation slide + `if (!visible) return null` + `zIndex: 500`
+- `DemanderModal.tsx` : `<Modal>` → overlay `<View>` + animation slide + `if (!visible) return null` + `zIndex: 500`
+- `RavitaillementModal.tsx` : `<Modal>` → overlay `<View>` + animation slide + `if (!visible) return null` + `zIndex: 500`
+- `LaunchAlertModal.tsx` : `<Modal>` → overlay `<Animated.View>` + animation fade + split outer/inner + `zIndex: 9999`
+- `SwipeToConfirm.tsx` : `Gesture.Pan()` → `PanResponder` natif RN
+- `index.tsx` (tabs) : retrait `GestureHandlerRootView` wrapper
+- `package.json` : retrait `react-native-gesture-handler`
+
+### À faire
+
+| Tâche | Description | Priorité |
+|---|---|---|
+| Wire Supabase réel | Brancher `useCapsules(userId)` dans les écrans (remplacer mocks) | Haute |
+| Profil editing | Édition pseudo + upload avatar | Moyenne |
+| Animations étoiles | Twinkle sur SpaceBackground | Basse |
+| ISS animation | Déplacement lent ISS dans SpaceBackground | Basse |
+| Animations au passage resolved | Flammes sur le Radar + montée d'avatar | Moyenne |
+| Vérifier fix NavigationStateContext | Tester fix NativeWind `active:` styles dynamiques sur device | Haute |
 
 ---
 
 ## Git & GitHub
 
 - **Repo GitHub** : privé, `capsule`
-- **Branche** : `main`
+- **Branche active** : `feat/activite-redesign`
 - **Auth** : GitHub CLI (`gh auth login`) ou PAT (scope `repo`)
 - **Supabase credentials** : `anon key` dans `app.json` = clé publique (RLS protège), safe à commiter
 - **Commit style** : Conventional Commits anglais (`feat:`, `fix:`, `refactor:`, `docs:`)
 
 ---
 
-### À faire
-
-| Tâche | Description | Priorité |
-|---|---|---|
-| Wire Supabase réel | Brancher `useCapsules(userId)` dans Dashboard, Activité, Amis (remplacer mocks) | Haute |
-| Profil editing | Édition pseudo + upload avatar | Moyenne |
-| Animations étoiles | Twinkle sur SpaceBackground | Basse |
-| ISS animation | Déplacement lent ISS dans SpaceBackground | Basse |
-
----
-
 ## État Actuel (octobre 2026)
 
-- **App fonctionnelle** avec mock data (`src/data/mocks.ts`). 4 tabs : Dashboard, Activité, Amis, Profil.
-- **Style cartoon v3** : bordures noires, hard shadows, cartes blanches, cosmonautes SVG avec photos pravatar.cc dans visières.
-- **Pivot Altitude** appliqué : score = Σ(resolved où creditor). 0 = Terre/Houston. Active = carburant. Plus de négatif.
-- **DB Supabase migrée** : migration 0003 exécutée (table `capsules`, RPCs `accept_capsule`/`resolve_capsule`).
-- **Hooks + services prêts** mais **pas encore branchés** aux écrans (mocks).
-- **ProfileSwitcher** : dev-only, sera supprimé au wire Supabase.
-- **Git** : repo `github.com/amencio/capsule`, branche `main`. Refonte v2 + v3 pas encore commitées.
+- **App fonctionnelle** avec mock data persistée via AsyncStorage.
+- **Dashboard redesigné** : UserStatusCard + TrajectoryMap (courbe parabolique) + TableauBord. Layout vertical.
+- **Modal Queue** : file de priorité pour alertes (launch > ravitaillement). `ModalQueueContext` wrapper dans `_layout.tsx`.
+- **Onglet Activité refondu** : dark theme, toggle scope (Mes activités / Amis), 5 filtres (Ravitaillement, Carburant, Mise à feu, Terminées). CapsuleCard 3 modes (creditor/debtor/observer avec double avatar).
+- **Système de couleurs unifié** : `ACTION_COLORS` + `ROLE_COLORS` dans `theme.ts`. Palette neon sur fond space. Plus de couleurs cartoon.
+- **Quantité retirée** : `amount` hardcoded à 1, plus de sélecteur UI.
+- **6 statuts de capsule** : `pending`, `active`, `launch_requested`, `resolved`, `rejected`, `expired`.
+- **Système de temps complet** : expiration 24h, forçage 3 min, retombée 1h.
+- **Swipe-to-confirm** fonctionnel (PanResponder natif).
+- **Modales** : overlays `<View>` absolus + animation Reanimated. Pas de `<Modal>` RN.
+- **DB Supabase migrée** mais hooks/services pas encore branchés (mocks).
+- **Lint + typecheck** : 0 erreur, 0 warning.

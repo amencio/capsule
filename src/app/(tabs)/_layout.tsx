@@ -2,31 +2,23 @@ import { Tabs } from "expo-router";
 import { LayoutDashboard, Activity, Users, User } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/theme";
-import { useAuthContext } from "../../context/AuthProvider";
-import { useCapsulesRealtime } from "../../hooks/useCapsules";
-import { useProfilesRealtime } from "../../hooks/useProfiles";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const { profile } = useAuthContext();
-  const userId = profile?.id;
-
-  useCapsulesRealtime(userId);
-  useProfilesRealtime(userId);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: COLORS.space.surface,
-          borderTopColor: COLORS.space.border,
-          borderTopWidth: 1,
+          backgroundColor: COLORS.cartoon.bg,
+          borderTopColor: COLORS.cartoon.black,
+          borderTopWidth: 2,
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom + 8,
         },
-        tabBarActiveTintColor: COLORS.neon.green,
-        tabBarInactiveTintColor: "#666",
+        tabBarActiveTintColor: COLORS.cartoon.green,
+        tabBarInactiveTintColor: "#999",
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: "700",

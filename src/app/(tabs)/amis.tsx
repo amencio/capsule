@@ -4,38 +4,39 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { SpaceBackground } from "../../components/SpaceBackground";
-import {
-  MOCK_USERS,
-  MOCK_CAPSULES,
-  CURRENT_USER_ID,
-} from "../../data/mocks";
-import { calculateAltitude } from "../../utils/karma";
+import { useCapsuleStore } from "../../context/CapsuleProvider";
+import { getRank } from "../../utils/ranks";
 import { STATUS_LABELS } from "../../constants/theme";
 
+const TOP3_MEDALS = ["🥇", "🥈", "🥉"];
+
 export default function AmisScreen() {
+  const { capsules, friends, currentUserId } = useCapsuleStore();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  const allAltitudes = MOCK_USERS.map((user) => ({
-    user,
-    altitude: calculateAltitude(MOCK_CAPSULES, user.id),
-  }));
+  const allAltitudes = friends.map((user) => {
+    const altitude = capsules
+      .filter((c) => c.status === "resolved" && c.creditor_id === user.id)
+      .length;
+    return { user, altitude };
+  });
   allAltitudes.sort((a, b) => b.altitude - a.altitude);
 
   const selectedUser = selectedUserId
-    ? MOCK_USERS.find((u) => u.id === selectedUserId)
+    ? friends.find((u) => u.id === selectedUserId)
     : null;
 
   const capsulesWithSelected = selectedUser
-    ? MOCK_CAPSULES.filter(
+    ? capsules.filter(
         (c) =>
           (c.creditor_id === selectedUser.id || c.debtor_id === selectedUser.id) &&
-          (c.creditor_id === CURRENT_USER_ID || c.debtor_id === CURRENT_USER_ID)
+          (c.creditor_id === currentUserId || c.debtor_id === currentUserId)
       )
     : [];
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-space-deep">
-      <SpaceBackground width={390} height={844} />
+      <SpaceBackground />
 
       <View className="px-4 pt-4 pb-2 z-10">
         <Text className="text-white text-xl font-bold">Amis</Text>
@@ -50,8 +51,10 @@ export default function AmisScreen() {
       >
         <View className="mb-4">
           {allAltitudes.map(({ user, altitude }, index) => {
-            const isCurrentUser = user.id === CURRENT_USER_ID;
+            const isCurrentUser = user.id === currentUserId;
             const isSelected = selectedUserId === user.id;
+            const rank = getRank(altitude);
+            const medal = index < 3 ? TOP3_MEDALS[index] : `#${index + 1}`;
             return (
               <Pressable
                 key={user.id}
@@ -59,17 +62,17 @@ export default function AmisScreen() {
                   Haptics.selectionAsync();
                   setSelectedUserId(isSelected ? null : user.id);
                 }}
-                className={`flex-row items-center gap-3 rounded-2xl px-4 py-3 mb-2 border ${
+                className={`flex-row items-center gap-3 rounded-xl px-4 py-3 mb-2 border-2 border-[#2E2E3A] ${
                   isSelected
-                    ? "bg-space-card border-neon-cyan/50"
-                    : "bg-space-surface border-space-border"
+                    ? "bg-[#00F0FF]/10"
+                    : "bg-[#22222E]"
                 }`}
               >
-                <Text className="text-white/30 text-sm font-bold w-6">
-                  #{index + 1}
+                <Text className="text-white/40 text-sm font-bold w-8">
+                  {medal}
                 </Text>
 
-                <View className="w-10 h-10 rounded-full items-center justify-center border-2 overflow-hidden bg-space-card">
+                <View className="w-10 h-10 rounded-full items-center justify-center border-2 border-[#2E2E3A] overflow-hidden bg-[#22222E]">
                   {user.avatar_url ? (
                     <Image
                       source={{ uri: user.avatar_url }}
@@ -86,25 +89,20 @@ export default function AmisScreen() {
                 <View className="flex-1">
                   <Text
                     className={`text-sm font-bold ${
-                      isCurrentUser ? "text-neon-cyan" : "text-white"
+                      isCurrentUser ? "text-[#00F0FF]" : "text-white"
                     }`}
                   >
                     {user.pseudo} {isCurrentUser && "(toi)"}
                   </Text>
-                  <Text className="text-white/40 text-[10px]">
-                    {altitude === 0
-                      ? "Houston (sur Terre)"
-                      : capsulesWithSelected.length > 0 && isSelected
-                      ? `${capsulesWithSelected.length} capsule(s) en commun`
-                      : "Cliquer pour détails"}
+                  <Text style={{ color: rank.color }} className="text-[10px] font-bold">
+                    {rank.emoji} {rank.name}
                   </Text>
                 </View>
 
                 <View className="items-end">
                   <Text
-                    className={`text-lg font-bold ${
-                      altitude > 0 ? "text-neon-green" : "text-neon-cyan"
-                    }`}
+                    style={{ color: rank.color }}
+                    className="text-lg font-bold"
                   >
                     {altitude}
                   </Text>
@@ -116,7 +114,7 @@ export default function AmisScreen() {
         </View>
 
         {selectedUser && (
-          <View className="bg-space-card/80 border border-space-border rounded-2xl p-4 mb-4">
+          <View className="bg-[#22222E] border-2 border-[#2E2E3A] rounded-xl p-4 mb-4">
             <Text className="text-white/60 text-xs font-bold tracking-widest uppercase mb-3">
               Capsules avec {selectedUser.pseudo}
             </Text>
@@ -124,16 +122,16 @@ export default function AmisScreen() {
               <Text className="text-white/30 text-sm">Aucune capsule en commun</Text>
             ) : (
               capsulesWithSelected.map((c) => {
-                const isCreditor = c.creditor_id === CURRENT_USER_ID;
+                const isCreditor = c.creditor_id === currentUserId;
                 const direction = isCreditor
-                  ? `→ Tu réclames à ${selectedUser.pseudo}`
-                  : `← ${selectedUser.pseudo} te réclame`;
+                  ? `→ ${selectedUser.pseudo} doit te ravitailler en ${c.drink_type}`
+                  : `← ${selectedUser.pseudo} attend ton ravitaillement en ${c.drink_type}`;
                 return (
-                  <View key={c.id} className="mb-3 pb-3 border-b border-space-border last:border-b-0">
+                  <View key={c.id} className="mb-3 pb-3 border-b border-[#2E2E3A] last:border-b-0">
                     <Text className="text-white/60 text-[10px] mb-1">{direction}</Text>
                     <View className="flex-row items-center gap-2">
-                      <View className="bg-neon-green/10 border border-neon-green/30 rounded px-2 py-0.5">
-                        <Text className="text-neon-green text-[10px] font-bold">
+                      <View className="bg-[#00FF66]/10 border border-[#00FF66]/30 rounded px-2 py-0.5">
+                        <Text className="text-[#00FF66] text-[10px] font-bold">
                           {c.drink_type}
                         </Text>
                       </View>

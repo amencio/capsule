@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { computeExpiresAt } from "../utils/capsule";
 import type { Capsule } from "../types";
 
 export async function fetchActiveCapsules(userId: string): Promise<Capsule[]> {
@@ -6,7 +7,7 @@ export async function fetchActiveCapsules(userId: string): Promise<Capsule[]> {
     .from("capsules")
     .select("*")
     .or(`creditor_id.eq.${userId},debtor_id.eq.${userId}`)
-    .in("status", ["active", "pending_launch"])
+    .in("status", ["active", "launch_requested"])
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data as Capsule[];
@@ -37,7 +38,6 @@ export async function createCapsule(params: {
   creditor_id: string;
   debtor_id: string;
   drink_type: string;
-  amount: number;
   reason: string;
 }): Promise<Capsule> {
   const { data, error } = await supabase
@@ -46,9 +46,10 @@ export async function createCapsule(params: {
       creditor_id: params.creditor_id,
       debtor_id: params.debtor_id,
       drink_type: params.drink_type,
-      amount: params.amount,
+      amount: 1,
       reason: params.reason,
       status: "pending",
+      expires_at: computeExpiresAt(),
     })
     .select()
     .single();
@@ -64,10 +65,9 @@ export async function acceptCapsule(capsuleId: string): Promise<void> {
 }
 
 export async function refuseCapsule(capsuleId: string): Promise<void> {
-  const { error } = await supabase
-    .from("capsules")
-    .delete()
-    .eq("id", capsuleId);
+  const { error } = await supabase.rpc("refuse_capsule", {
+    capsule_uuid: capsuleId,
+  });
   if (error) throw error;
 }
 
@@ -80,6 +80,13 @@ export async function requestLaunchCapsule(capsuleId: string): Promise<void> {
 
 export async function authorizeLaunchCapsule(capsuleId: string): Promise<void> {
   const { error } = await supabase.rpc("authorize_launch", {
+    capsule_uuid: capsuleId,
+  });
+  if (error) throw error;
+}
+
+export async function forceLaunchCapsule(capsuleId: string): Promise<void> {
+  const { error } = await supabase.rpc("force_launch", {
     capsule_uuid: capsuleId,
   });
   if (error) throw error;

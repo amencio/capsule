@@ -1,135 +1,89 @@
-import { useState, useCallback } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { useState, useEffect } from "react";
+import { View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
 import { SpaceBackground } from "../../components/SpaceBackground";
 import { CapsuleLogo } from "../../components/CapsuleLogo";
-import { GravJauge } from "../../components/GravJauge";
-import { CapsuleCard } from "../../components/CapsuleCard";
-import { PendingAlertBanner } from "../../components/PendingAlertBanner";
 import { ProfileSwitcher } from "../../components/ProfileSwitcher";
-import { LaunchModal } from "../../components/LaunchModal";
-import {
-  MOCK_USERS,
-  MOCK_CAPSULES,
-  MOCK_PROFILES_MAP,
-  CURRENT_USER_ID,
-} from "../../data/mocks";
-import { calculateAltitudeForAll } from "../../utils/karma";
-import type { Capsule, UserProfile } from "../../types";
+import { UserStatusCard } from "../../components/UserStatusCard";
+import { TrajectoryMap } from "../../components/TrajectoryMap";
+import { TableauBord } from "../../components/TableauBord";
+import { DemanderModal } from "../../components/DemanderModal";
+import { AllumageModal } from "../../components/AllumageModal";
+import { RavitaillementModal } from "../../components/RavitaillementModal";
+import { LaunchAlertModal } from "../../components/LaunchAlertModal";
+import { RavitaillementAlertModal } from "../../components/RavitaillementAlertModal";
+import { useCapsuleStore } from "../../context/CapsuleProvider";
+import { useModalQueue } from "../../context/ModalQueueContext";
 
-const HARD_SHADOW_ORANGE = {
-  shadowColor: "#000",
-  shadowOffset: { width: 4, height: 6 },
-  shadowOpacity: 1,
-  shadowRadius: 0,
-  elevation: 7,
-};
+export default function CockpitScreen() {
+  const {
+    currentUserId,
+    setCurrentUserId,
+    pendingActionId,
+    handleAccept,
+    handleRefuse,
+    handleRequestLaunch,
+    handleAuthorizeLaunch,
+    handleForceLaunch,
+    handleLaunch,
+    handleExpiryCheck,
+    handleLaunchTimeoutCheck,
+    receivedFuelRequests,
+    myFuelCapsules,
+    incomingLaunchRequests,
+    profilesMap,
+    friends,
+    markers,
+    altitude,
+    tankLevel,
+    rank,
+    getCreditorTankLevel,
+    pendingRequestsCount,
+  } = useCapsuleStore();
 
-const HARD_SHADOW_ORANGE_PRESSED = {
-  shadowColor: "#000",
-  shadowOffset: { width: 2, height: 2 },
-  shadowOpacity: 1,
-  shadowRadius: 0,
-  elevation: 3,
-};
+  const { currentItem, enqueue, dismiss, isDismissed, clearDismissed } = useModalQueue();
 
-export default function DashboardScreen() {
-  const [currentUserId, setCurrentUserId] = useState(CURRENT_USER_ID);
-  const [capsules, setCapsules] = useState<Capsule[]>(MOCK_CAPSULES);
-  const [launchVisible, setLaunchVisible] = useState(false);
-  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+  const [demanderVisible, setDemanderVisible] = useState(false);
+  const [allumageVisible, setAllumageVisible] = useState(false);
+  const [ravitaillementVisible, setRavitaillementVisible] = useState(false);
 
-  const allAltitudes = calculateAltitudeForAll(
-    capsules,
-    MOCK_USERS.map((u) => u.id)
-  );
+  useEffect(() => {
+    handleExpiryCheck();
+    handleLaunchTimeoutCheck();
+  }, [handleExpiryCheck, handleLaunchTimeoutCheck]);
 
-  const markers = MOCK_USERS.map((user) => ({
-    user,
-    altitude: allAltitudes[user.id] ?? 0,
-  }));
+  useEffect(() => {
+    incomingLaunchRequests.forEach((c) => {
+      clearDismissed(c.id);
+      enqueue({ id: c.id, type: "launch" });
+    });
+  }, [incomingLaunchRequests, enqueue, clearDismissed]);
 
-  const pendingLaunchDebtorCapsules = capsules.filter(
-    (c) => c.status === "pending_launch" && c.debtor_id === currentUserId
-  );
-  const pendingCapsules = capsules.filter(
-    (c) => c.status === "pending" && c.debtor_id === currentUserId
-  );
-  const activeAndWaitingCapsules = capsules.filter(
-    (c) =>
-      (c.status === "active" &&
-        (c.creditor_id === currentUserId || c.debtor_id === currentUserId)) ||
-      (c.status === "pending_launch" && c.creditor_id === currentUserId)
-  );
+  useEffect(() => {
+    receivedFuelRequests.forEach((c) => {
+      if (!isDismissed(c.id)) {
+        enqueue({ id: c.id, type: "ravitaillement" });
+      }
+    });
+  }, [receivedFuelRequests, enqueue, isDismissed]);
 
-  const handleAccept = useCallback((id: string) => {
-    setPendingActionId(id);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setCapsules((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, status: "active" } : c))
-    );
-    setPendingActionId(null);
-  }, []);
+  useEffect(() => {
+    const pendingIds = new Set(receivedFuelRequests.map((c) => c.id));
+    const launchIds = new Set(incomingLaunchRequests.map((c) => c.id));
+    [...incomingLaunchRequests, ...receivedFuelRequests].forEach((c) => {
+      if (!pendingIds.has(c.id) && !launchIds.has(c.id)) {
+        clearDismissed(c.id);
+      }
+    });
+  }, [receivedFuelRequests, incomingLaunchRequests, clearDismissed]);
 
-  const handleRefuse = useCallback((id: string) => {
-    setPendingActionId(id);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    setCapsules((prev) => prev.filter((c) => c.id !== id));
-    setPendingActionId(null);
-  }, []);
-
-  const handleDecapsuler = useCallback((id: string) => {
-    setPendingActionId(id);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setCapsules((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, status: "pending_launch" } : c
-      )
-    );
-    setPendingActionId(null);
-  }, []);
-
-  const handleAuthorize = useCallback((id: string) => {
-    setPendingActionId(id);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setCapsules((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? { ...c, status: "resolved", resolved_at: new Date().toISOString() }
-          : c
-      )
-    );
-    setPendingActionId(null);
-  }, []);
-
-  const handleLaunch = useCallback(
-    (data: Omit<Capsule, "id" | "status" | "created_at" | "resolved_at">) => {
-      const newCapsule: Capsule = {
-        ...data,
-        id: `c${Date.now()}`,
-        status: "pending",
-        created_at: new Date().toISOString(),
-        resolved_at: null,
-      };
-      setCapsules((prev) => [newCapsule, ...prev]);
-    },
-    []
-  );
-
-  const friends = MOCK_USERS;
-  const profilesMap: Record<string, UserProfile> = MOCK_PROFILES_MAP;
-
-  const hasCapsules =
-    pendingLaunchDebtorCapsules.length > 0 ||
-    pendingCapsules.length > 0 ||
-    activeAndWaitingCapsules.length > 0;
+  const currentUser = friends.find((f) => f.id === currentUserId);
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1">
       <SpaceBackground />
 
-      <View className="flex-row items-center justify-between px-4 pt-2 pb-3 z-10">
+      <View className="w-full flex-row items-center justify-between px-4 pt-2 pb-2 z-10">
         <View className="flex-row items-center gap-2">
           <CapsuleLogo size={26} />
           <Text className="text-white text-base font-bold tracking-widest">
@@ -137,103 +91,88 @@ export default function DashboardScreen() {
           </Text>
         </View>
         <ProfileSwitcher
-          users={MOCK_USERS}
+          users={friends}
           currentUserId={currentUserId}
           onSelect={setCurrentUserId}
         />
       </View>
 
-      <View className="px-4 mb-2 z-10">
-        <PendingAlertBanner count={pendingCapsules.length} />
+      <View className="flex-1 flex-col px-4 z-10 gap-3 pt-2">
+        {currentUser && (
+          <UserStatusCard
+            user={currentUser}
+            altitude={altitude}
+            tankLevel={tankLevel}
+            rank={rank}
+          />
+        )}
+
+        <TrajectoryMap currentUserId={currentUserId} markers={markers} />
       </View>
 
-      <View className="flex-1 flex-row px-4 z-10">
-        <View className="w-[35%] items-center justify-start pt-4">
-          <GravJauge currentUserId={currentUserId} markers={markers} />
-        </View>
+      <TableauBord
+        onPressDemander={() => setDemanderVisible(true)}
+        onPressAllumage={() => setAllumageVisible(true)}
+        onPressRavitaillement={() => setRavitaillementVisible(true)}
+        pendingRequestsCount={pendingRequestsCount}
+        allumageDisabled={myFuelCapsules.length === 0}
+      />
 
-        <View className="flex-1 pl-2">
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-              setLaunchVisible(true);
-            }}
-            className="rounded-2xl border-2 border-black px-4 py-4 mb-4"
-            style={({ pressed }) => ({
-              backgroundColor: "#f97316",
-              ...(pressed ? HARD_SHADOW_ORANGE_PRESSED : HARD_SHADOW_ORANGE),
-              transform: pressed ? [{ translateY: 2 }] : [],
-            })}
-          >
-            <Text className="text-white font-black text-sm uppercase text-center tracking-wide">
-              LANCER UNE{"\n"}CAPSULE ! 🚀
-            </Text>
-          </Pressable>
-
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 100 }}
-          >
-            <Text className="text-white/60 text-xs font-bold tracking-widest uppercase mb-2">
-              Mes Capsules
-            </Text>
-
-            {pendingLaunchDebtorCapsules.map((capsule) => (
-              <CapsuleCard
-                key={capsule.id}
-                capsule={capsule}
-                currentUserId={currentUserId}
-                profiles={profilesMap}
-                onAuthorize={handleAuthorize}
-                isPending={pendingActionId === capsule.id}
-              />
-            ))}
-
-            {pendingCapsules.map((capsule) => (
-              <CapsuleCard
-                key={capsule.id}
-                capsule={capsule}
-                currentUserId={currentUserId}
-                profiles={profilesMap}
-                onAccept={handleAccept}
-                onRefuse={handleRefuse}
-                isPending={pendingActionId === capsule.id}
-              />
-            ))}
-
-            {activeAndWaitingCapsules.map((capsule) => (
-              <CapsuleCard
-                key={capsule.id}
-                capsule={capsule}
-                currentUserId={currentUserId}
-                profiles={profilesMap}
-                onDecapsuler={handleDecapsuler}
-                onAuthorize={handleAuthorize}
-                isPending={pendingActionId === capsule.id}
-              />
-            ))}
-
-            {!hasCapsules && (
-              <View className="rounded-2xl p-6 items-center mt-2 border-2 border-dashed border-white/20">
-                <Text className="text-white/30 text-sm">
-                  Aucune capsule en orbite
-                </Text>
-                <Text className="text-white/20 text-xs mt-1">
-                  Lance-en une pour commencer 🚀
-                </Text>
-              </View>
-            )}
-          </ScrollView>
-        </View>
-      </View>
-
-      <LaunchModal
-        visible={launchVisible}
-        onClose={() => setLaunchVisible(false)}
+      <DemanderModal
+        visible={demanderVisible}
+        onClose={() => setDemanderVisible(false)}
         onLaunch={handleLaunch}
         friends={friends}
         currentUserId={currentUserId}
+        getCreditorTankLevel={getCreditorTankLevel}
+        profilesMap={profilesMap}
       />
+
+      <AllumageModal
+        visible={allumageVisible}
+        onClose={() => setAllumageVisible(false)}
+        myFuelCapsules={myFuelCapsules}
+        profilesMap={profilesMap}
+        pendingActionId={pendingActionId}
+        onRequestLaunch={handleRequestLaunch}
+        onForceLaunch={handleForceLaunch}
+      />
+
+      <RavitaillementModal
+        visible={ravitaillementVisible}
+        onClose={() => setRavitaillementVisible(false)}
+        receivedFuelRequests={receivedFuelRequests}
+        currentUserId={currentUserId}
+        profilesMap={profilesMap}
+        pendingActionId={pendingActionId}
+        onAccept={handleAccept}
+        onRefuse={handleRefuse}
+        getCreditorTankLevel={getCreditorTankLevel}
+      />
+
+      {currentItem?.type === "launch" && (
+        <LaunchAlertModal
+          visible
+          incomingLaunchRequests={incomingLaunchRequests}
+          profilesMap={profilesMap}
+          pendingActionId={pendingActionId}
+          onAuthorize={handleAuthorizeLaunch}
+          onDismiss={() => dismiss(currentItem.id)}
+        />
+      )}
+
+      {currentItem?.type === "ravitaillement" && (
+        <RavitaillementAlertModal
+          visible
+          capsule={receivedFuelRequests.find((c) => c.id === currentItem.id) ?? null}
+          profilesMap={profilesMap}
+          pendingActionId={pendingActionId}
+          onAccept={handleAccept}
+          onRefuse={handleRefuse}
+          onDismiss={() => dismiss(currentItem.id)}
+          getCreditorTankLevel={getCreditorTankLevel}
+        />
+      )}
     </SafeAreaView>
   );
 }

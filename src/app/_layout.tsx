@@ -1,16 +1,20 @@
 import "../../global.css";
+import { memo } from "react";
 import { Stack, Redirect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, LogBox } from "react-native";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "../lib/queryClient";
 import { AuthProvider, useAuthContext } from "../context/AuthProvider";
 import { HoustonToastProvider } from "../context/HoustonToastContext";
+import { CapsuleProvider } from "../context/CapsuleProvider";
+import { ModalQueueProvider } from "../context/ModalQueueContext";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import * as NavigationBar from "expo-navigation-bar";
 
 NavigationBar.setStyle("dark");
+LogBox.ignoreLogs(["Cannot connect to Expo CLI"]);
 
 function LoadingScreen() {
   return (
@@ -20,7 +24,7 @@ function LoadingScreen() {
   );
 }
 
-function AppContent() {
+const AppContent = memo(function AppContent() {
   const { session, loading } = useAuthContext();
 
   if (loading) return <LoadingScreen />;
@@ -37,14 +41,18 @@ function AppContent() {
       </SafeAreaProvider>
     </ErrorBoundary>
   );
-}
+});
 
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <HoustonToastProvider>
-          <AppContent />
+          <CapsuleProvider>
+            <ModalQueueProvider>
+              <AppContent />
+            </ModalQueueProvider>
+          </CapsuleProvider>
         </HoustonToastProvider>
       </AuthProvider>
     </QueryClientProvider>

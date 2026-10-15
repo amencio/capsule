@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { View, Text, useWindowDimensions } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -36,23 +36,14 @@ const STARS: Star[] = [
   { cx: 330, cy: 350, r: 1, opacity: 0.6 },
 ];
 
-interface SpaceBackgroundProps {
-  width?: number;
-  height?: number;
-}
-
-export function SpaceBackground({ width: propWidth, height: propHeight }: SpaceBackgroundProps) {
+export function SpaceBackground() {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const width = propWidth ?? screenWidth;
-  const height = propHeight ?? screenHeight;
-
-  const earthR = width * 0.7;
-  const earthCx = width * 0.5;
-  const earthCy = height + earthR * 0.55;
+  const width = screenWidth;
+  const height = screenHeight;
 
   const stars = useMemo(
-    () => STARS.filter((s) => s.cx < width && s.cy < height - earthR * 0.35),
-    [width, height, earthR]
+    () => STARS.filter((s) => s.cx < width && s.cy < height),
+    [width, height]
   );
 
   return (
@@ -78,18 +69,7 @@ export function SpaceBackground({ width: propWidth, height: propHeight }: SpaceB
 
         <Circle cx={width * 0.85} cy={height * 0.06} r={2.5} fill="#00F0FF" opacity={0.8} />
         <Circle cx={width * 0.15} cy={height * 0.04} r={2} fill="white" opacity={0.9} />
-
-        <Circle cx={earthCx} cy={earthCy} r={earthR} fill="#1B4D8C" opacity={0.85} />
-        <Circle cx={earthCx - earthR * 0.3} cy={earthCy - earthR * 0.35} r={earthR * 0.22} fill="#2A7F3E" opacity={0.35} />
-        <Circle cx={earthCx + earthR * 0.15} cy={earthCy - earthR * 0.45} r={earthR * 0.16} fill="#2A7F3E" opacity={0.3} />
-        <Circle cx={earthCx + earthR * 0.35} cy={earthCy - earthR * 0.1} r={earthR * 0.12} fill="#2A7F3E" opacity={0.25} />
-        <Circle cx={earthCx - earthR * 0.1} cy={earthCy - earthR * 0.15} r={earthR * 0.1} fill="#2A7F3E" opacity={0.2} />
       </Svg>
-
-      <View className="absolute top-6 left-4 items-center">
-        <Text className="text-2xl">🛰️</Text>
-        <Text className="text-white/30 text-[8px] font-bold tracking-widest mt-0.5">ISS</Text>
-      </View>
     </View>
   );
 }

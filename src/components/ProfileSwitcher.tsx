@@ -20,23 +20,23 @@ export function ProfileSwitcher({
     <View>
       <Pressable
         onPress={() => setOpen(true)}
-        className="bg-space-surface border border-space-border rounded-xl px-3 py-1.5 flex-row items-center gap-1.5"
+        className="bg-[#f8f9fa] border-2 border-black rounded-xl px-3 py-1.5 flex-row items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-0.5"
       >
-        <View className="w-5 h-5 rounded-full bg-neon-cyan/20 border border-neon-cyan/50 items-center justify-center">
-          <Text className="text-neon-cyan text-[9px] font-bold">
+        <View className="w-5 h-5 rounded-full bg-[#06b6d4]/20 border border-[#06b6d4]/50 items-center justify-center">
+          <Text className="text-[#06b6d4] text-[9px] font-bold">
             {currentUser?.pseudo.charAt(0).toUpperCase() ?? "?"}
           </Text>
         </View>
-        <Text className="text-white/70 text-[10px] font-semibold">
+        <Text className="text-black/70 text-[10px] font-bold">
           Vue: {currentUser?.pseudo ?? "???"}
         </Text>
-        <Text className="text-white/40 text-[8px]">▼</Text>
+        <Text className="text-black/40 text-[8px]">▼</Text>
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable className="flex-1 bg-black/60 items-center justify-center" onPress={() => setOpen(false)}>
-          <View className="bg-space-surface border border-space-border rounded-2xl p-2 w-64 max-h-80">
-            <Text className="text-white/40 text-[10px] font-bold tracking-widest uppercase px-3 py-2">
+          <View className="bg-[#f8f9fa] border-2 border-black rounded-2xl p-2 w-64 max-h-80 shadow-[4px_6px_0px_0px_rgba(0,0,0,1)]">
+            <Text className="text-black/40 text-[10px] font-bold tracking-widest uppercase px-3 py-2">
               Simuler profil
             </Text>
             <FlatList
@@ -48,24 +48,22 @@ export function ProfileSwitcher({
                     onSelect(item.id);
                     setOpen(false);
                   }}
-                  className={`flex-row items-center gap-2.5 rounded-xl px-3 py-2.5 ${
-                    item.id === currentUserId ? "bg-neon-cyan/10" : ""
-                  }`}
+                  className={`flex-row items-center gap-2.5 rounded-xl px-3 py-2.5 border-2 ${item.id === currentUserId ? "bg-[#06b6d4]/10 border-[#06b6d4]/50" : "border-transparent"}`}
                 >
-                  <View className="w-7 h-7 rounded-full bg-space-card border border-space-border items-center justify-center">
-                    <Text className="text-white text-xs font-bold">
+                  <View className="w-7 h-7 rounded-full bg-white border-2 border-black items-center justify-center">
+                    <Text className="text-black text-xs font-bold">
                       {item.pseudo.charAt(0).toUpperCase()}
                     </Text>
                   </View>
                   <Text
-                    className={`text-sm font-semibold ${
-                      item.id === currentUserId ? "text-neon-cyan" : "text-white"
+                    className={`text-sm font-bold ${
+                      item.id === currentUserId ? "text-[#06b6d4]" : "text-black"
                     }`}
                   >
                     {item.pseudo}
                   </Text>
                   {item.id === currentUserId && (
-                    <Text className="text-neon-cyan text-xs ml-auto">✓</Text>
+                    <Text className="text-[#06b6d4] text-xs ml-auto">✓</Text>
                   )}
                 </Pressable>
               )}

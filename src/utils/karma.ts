@@ -4,8 +4,8 @@ export function calculateKarma(capsules: Capsule[], userId: string): number {
   let karma = 0;
   for (const c of capsules) {
     if (c.status !== "active") continue;
-    if (c.creditor_id === userId) karma += c.amount;
-    if (c.debtor_id === userId) karma -= c.amount;
+    if (c.creditor_id === userId) karma += 1;
+    if (c.debtor_id === userId) karma -= 1;
   }
   return karma;
 }
@@ -25,7 +25,7 @@ export function calculateAltitude(capsules: Capsule[], userId: string): number {
   let altitude = 0;
   for (const c of capsules) {
     if (c.status !== "resolved") continue;
-    if (c.creditor_id === userId) altitude += c.amount;
+    if (c.creditor_id === userId) altitude += 1;
   }
   return altitude;
 }
